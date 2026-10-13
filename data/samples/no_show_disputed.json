@@ -1,0 +1,108 @@
+{
+  "dispute": {
+    "dispute_id": "NS-2026-002",
+    "dispute_type": "no_show",
+    "filed_by": "rider",
+    "filed_at": "2026-10-08T19:15:00+08:00",
+    "ride_id": "RIDE-8211",
+    "claim": "I was at the pickup point since 6:58 PM but the driver left after only 2 minutes and charged me a no-show fee. I messaged the driver but they had already left.",
+    "requested_remedy": {
+      "type": "refund",
+      "amount": 5.00,
+      "reason": "Driver left before the mandatory 5-minute wait period and I was present at the pickup location"
+    }
+  },
+  "trip": {
+    "ride_id": "RIDE-8211",
+    "status": "no_show_cancelled",
+    "pickup": {
+      "lat": 1.2840,
+      "lng": 103.8440,
+      "address": "Tiong Bahru MRT, Exit B, Singapore",
+      "timestamp_scheduled": "2026-10-08T19:00:00+08:00",
+      "timestamp_driver_arrival": "2026-10-08T19:00:00+08:00"
+    },
+    "dropoff": {
+      "lat": 1.2980,
+      "lng": 103.8570,
+      "address": "Marina Bay Financial Centre, Singapore",
+      "timestamp": null
+    },
+    "estimated_duration_min": 10,
+    "actual_duration_min": 0,
+    "estimated_distance_km": 3.2,
+    "actual_distance_km": 0,
+    "driver_wait_time_min": 2,
+    "driver_departure_time": "2026-10-08T19:02:00+08:00",
+    "cancellation_reason": "rider_no_show"
+  },
+  "driver_gps_at_pickup": [
+    {"lat": 1.2840, "lng": 103.8440, "timestamp": "2026-10-08T19:00:00+08:00", "note": "Arrived at pickup"},
+    {"lat": 1.2840, "lng": 103.8440, "timestamp": "2026-10-08T19:01:00+08:00", "note": "Waiting"},
+    {"lat": 1.2842, "lng": 103.8445, "timestamp": "2026-10-08T19:02:00+08:00", "note": "Departed (early!)"},
+    {"lat": 1.2850, "lng": 103.8450, "timestamp": "2026-10-08T19:03:00+08:00", "note": "Driving away"}
+  ],
+  "rider_gps_at_pickup": [
+    {"lat": 1.2840, "lng": 103.8440, "timestamp": "2026-10-08T18:58:00+08:00", "note": "At pickup (2 min early)"},
+    {"lat": 1.2840, "lng": 103.8440, "timestamp": "2026-10-08T19:00:00+08:00", "note": "At pickup location"},
+    {"lat": 1.2840, "lng": 103.8440, "timestamp": "2026-10-08T19:01:00+08:00", "note": "Looking for driver"},
+    {"lat": 1.2840, "lng": 103.8440, "timestamp": "2026-10-08T19:02:00+08:00", "note": "Driver already gone"}
+  ],
+  "rider_distance_from_pickup_m": 0,
+  "chat_logs": [
+    {"sender": "system", "timestamp": "2026-10-08T19:00:00+08:00", "message": "Driver has arrived at Tiong Bahru MRT, Exit B."},
+    {"sender": "rider", "timestamp": "2026-10-08T19:00:30+08:00", "message": "Hi, I'm at the taxi stand outside Tiong Bahru MRT Exit B. I don't see your car."},
+    {"sender": "rider", "timestamp": "2026-10-08T19:01:15+08:00", "message": "Are you here? I can't find you. I've been waiting since 6:58."},
+    {"sender": "system", "timestamp": "2026-10-08T19:02:05+08:00", "message": "Trip cancelled by driver. No-show fee of $5.00 applied."},
+    {"sender": "rider", "timestamp": "2026-10-08T19:02:30+08:00", "message": "Wait, did you cancel? I've been here since 6:58! I was standing right at the pickup point!"},
+    {"sender": "rider", "timestamp": "2026-10-08T19:03:00+08:00", "message": "This is unacceptable. You only waited 2 minutes. I'm filing a dispute."}
+  ],
+  "fare_breakdown": {
+    "base_fare": 0.00,
+    "distance_charge": 0.00,
+    "distance_km": 0,
+    "distance_rate_per_km": 0.75,
+    "time_charge": 0.00,
+    "time_min": 0,
+    "time_rate_per_min": 0.15,
+    "subtotal": 0.00,
+    "surge_multiplier": 1.0,
+    "surge_charge": 0.00,
+    "promo_discount": 0.00,
+    "cancellation_fee": 5.00,
+    "total": 5.00,
+    "currency": "SGD"
+  },
+  "rider_profile": {
+    "rider_id": "R-7703",
+    "name": "Daniel L.",
+    "account_age_days": 800,
+    "rating": 4.9,
+    "total_rides": 215,
+    "past_disputes": []
+  },
+  "driver_profile": {
+    "driver_id": "D-2210",
+    "name": "Ahmad F.",
+    "account_age_days": 45,
+    "rating": 3.8,
+    "total_rides": 67,
+    "completion_rate": 0.82,
+    "past_disputes": [
+      {
+        "dispute_id": "NS-2026-0012",
+        "type": "no_show",
+        "outcome": "refund",
+        "amount": 5.00,
+        "date": "2026-09-20"
+      },
+      {
+        "dispute_id": "RB-2026-0015",
+        "type": "rude_behavior",
+        "outcome": "warning",
+        "amount": 0.00,
+        "date": "2026-09-25"
+      }
+    ]
+  }
+}

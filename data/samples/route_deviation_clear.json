@@ -1,0 +1,132 @@
+{
+  "dispute": {
+    "dispute_id": "RD-2026-001",
+    "dispute_type": "route_deviation",
+    "filed_by": "rider",
+    "filed_at": "2026-10-08T15:05:00+08:00",
+    "ride_id": "RIDE-7821",
+    "claim": "Driver took a significantly longer route from Chinatown to East Coast Park, going west via AYE and West Coast instead of the direct eastbound route via Shenton Way. Fare was inflated from approximately $13.66 to $20.04.",
+    "requested_remedy": {
+      "type": "refund",
+      "amount": 6.38,
+      "reason": "Overcharge due to unauthorized route deviation"
+    }
+  },
+  "trip": {
+    "ride_id": "RIDE-7821",
+    "status": "completed",
+    "pickup": {
+      "lat": 1.2839,
+      "lng": 103.8447,
+      "address": "Chinatown Complex, Singapore",
+      "timestamp": "2026-10-08T13:15:00+08:00"
+    },
+    "dropoff": {
+      "lat": 1.3065,
+      "lng": 103.8866,
+      "address": "East Coast Park Area D, Singapore",
+      "timestamp": "2026-10-08T13:52:00+08:00"
+    },
+    "estimated_duration_min": 20,
+    "actual_duration_min": 37,
+    "estimated_distance_km": 6.5,
+    "actual_distance_km": 10.2,
+    "deviation_pct": 56.9,
+    "optimal_route": [
+      {"lat": 1.2839, "lng": 103.8447, "timestamp": "2026-10-08T13:15:00+08:00", "note": "Chinatown start"},
+      {"lat": 1.2820, "lng": 103.8500, "timestamp": "2026-10-08T13:17:30+08:00", "note": "Shenton Way"},
+      {"lat": 1.2880, "lng": 103.8580, "timestamp": "2026-10-08T13:20:00+08:00", "note": "Marina Boulevard"},
+      {"lat": 1.2970, "lng": 103.8720, "timestamp": "2026-10-08T13:25:00+08:00", "note": "ECP entrance"},
+      {"lat": 1.3050, "lng": 103.8820, "timestamp": "2026-10-08T13:30:00+08:00", "note": "ECP"},
+      {"lat": 1.3065, "lng": 103.8866, "timestamp": "2026-10-08T13:35:00+08:00", "note": "Destination"}
+    ],
+    "actual_route": [
+      {"lat": 1.2839, "lng": 103.8447, "timestamp": "2026-10-08T13:15:00+08:00", "note": "Chinatown start"},
+      {"lat": 1.2845, "lng": 103.8410, "timestamp": "2026-10-08T13:16:30+08:00", "note": "Cantonment Road"},
+      {"lat": 1.2800, "lng": 103.8350, "timestamp": "2026-10-08T13:19:00+08:00", "note": "AYE on-ramp"},
+      {"lat": 1.2760, "lng": 103.8200, "timestamp": "2026-10-08T13:24:00+08:00", "note": "AYE westbound"},
+      {"lat": 1.2820, "lng": 103.8080, "timestamp": "2026-10-08T13:30:00+08:00", "note": "West Coast Road"},
+      {"lat": 1.2920, "lng": 103.8200, "timestamp": "2026-10-08T13:35:00+08:00", "note": "Clementi Road"},
+      {"lat": 1.3000, "lng": 103.8450, "timestamp": "2026-10-08T13:41:00+08:00", "note": "West Coast Highway"},
+      {"lat": 1.3050, "lng": 103.8700, "timestamp": "2026-10-08T13:47:00+08:00", "note": "Approaching ECP"},
+      {"lat": 1.3065, "lng": 103.8866, "timestamp": "2026-10-08T13:52:00+08:00", "note": "Destination"}
+    ],
+    "traffic_conditions": {
+      "optimal_route_avg_speed_kmh": 35.0,
+      "actual_route_avg_speed_kmh": 28.0,
+      "optimal_route_congestion": "light",
+      "actual_route_congestion": "moderate",
+      "optimal_route_incidents": [],
+      "actual_route_incidents": []
+    }
+  },
+  "chat_logs": [
+    {"sender": "rider", "timestamp": "2026-10-08T13:12:00+08:00", "message": "Hi, I'm at the pickup point outside Chinatown Complex"},
+    {"sender": "driver", "timestamp": "2026-10-08T13:13:00+08:00", "message": "On my way, 2 minutes away"},
+    {"sender": "system", "timestamp": "2026-10-08T13:15:00+08:00", "message": "Trip started"},
+    {"sender": "rider", "timestamp": "2026-10-08T13:22:00+08:00", "message": "Why are we going towards the west? I usually go via East Coast."},
+    {"sender": "driver", "timestamp": "2026-10-08T13:23:00+08:00", "message": "Trust me, I know the way"},
+    {"sender": "rider", "timestamp": "2026-10-08T13:28:00+08:00", "message": "This doesn't seem right, we're going away from East Coast Park"},
+    {"sender": "driver", "timestamp": "2026-10-08T13:29:00+08:00", "message": "It's fine, there's a shortcut this way"},
+    {"sender": "rider", "timestamp": "2026-10-08T13:45:00+08:00", "message": "We've been driving for 30 min already, this is way too long"},
+    {"sender": "system", "timestamp": "2026-10-08T13:52:00+08:00", "message": "Trip completed"},
+    {"sender": "rider", "timestamp": "2026-10-08T13:53:00+08:00", "message": "That was way longer than usual. I'm filing a dispute."}
+  ],
+  "fare_breakdown": {
+    "base_fare": 3.50,
+    "distance_charge": 7.65,
+    "distance_km": 10.2,
+    "distance_rate_per_km": 0.75,
+    "time_charge": 5.55,
+    "time_min": 37,
+    "time_rate_per_min": 0.15,
+    "subtotal": 16.70,
+    "surge_multiplier": 1.2,
+    "surge_charge": 3.34,
+    "promo_discount": 0.00,
+    "cancellation_fee": 0.00,
+    "total": 20.04,
+    "currency": "SGD",
+    "expected_total_optimal": 13.66
+  },
+  "rider_profile": {
+    "rider_id": "R-8821",
+    "name": "Sarah T.",
+    "account_age_days": 540,
+    "rating": 4.8,
+    "total_rides": 127,
+    "past_disputes": [
+      {
+        "dispute_id": "RD-2026-0007",
+        "type": "fare_dispute",
+        "outcome": "partial_refund",
+        "amount": 2.50,
+        "date": "2026-07-15"
+      }
+    ]
+  },
+  "driver_profile": {
+    "driver_id": "D-3401",
+    "name": "Marcus L.",
+    "account_age_days": 720,
+    "rating": 4.2,
+    "total_rides": 2150,
+    "completion_rate": 0.94,
+    "past_disputes": [
+      {
+        "dispute_id": "RD-2026-0021",
+        "type": "route_deviation",
+        "outcome": "refund",
+        "amount": 5.20,
+        "date": "2026-08-01"
+      },
+      {
+        "dispute_id": "RD-2026-0035",
+        "type": "rude_behavior",
+        "outcome": "warning",
+        "amount": 0.00,
+        "date": "2026-06-20"
+      }
+    ]
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "dispute": {
+    "dispute_id": "NS-2026-001",
+    "dispute_type": "no_show",
+    "filed_by": "rider",
+    "filed_at": "2026-10-08T19:20:00+08:00",
+    "ride_id": "RIDE-8104",
+    "claim": "I was charged a $5.00 no-show fee but I was only 2 minutes late. The driver didn't give me enough time to arrive.",
+    "requested_remedy": {
+      "type": "refund",
+      "amount": 5.00,
+      "reason": "Driver did not wait the required 5 minutes before cancelling"
+    }
+  },
+  "trip": {
+    "ride_id": "RIDE-8104",
+    "status": "no_show_cancelled",
+    "pickup": {
+      "lat": 1.3502,
+      "lng": 103.8742,
+      "address": "Serangoon MRT, Taxi Stand, Singapore",
+      "timestamp_scheduled": "2026-10-08T18:30:00+08:00",
+      "timestamp_driver_arrival": "2026-10-08T18:30:00+08:00"
+    },
+    "dropoff": {
+      "lat": 1.3520,
+      "lng": 103.8950,
+      "address": "Hougang Mall, Singapore",
+      "timestamp": null
+    },
+    "estimated_duration_min": 12,
+    "actual_duration_min": 0,
+    "estimated_distance_km": 3.8,
+    "actual_distance_km": 0,
+    "driver_wait_time_min": 6,
+    "driver_departure_time": "2026-10-08T18:36:00+08:00",
+    "cancellation_reason": "rider_no_show"
+  },
+  "driver_gps_at_pickup": [
+    {"lat": 1.3502, "lng": 103.8742, "timestamp": "2026-10-08T18:30:00+08:00", "note": "Arrived at pickup"},
+    {"lat": 1.3502, "lng": 103.8742, "timestamp": "2026-10-08T18:32:00+08:00", "note": "Waiting (stationary)"},
+    {"lat": 1.3502, "lng": 103.8742, "timestamp": "2026-10-08T18:34:00+08:00", "note": "Still waiting"},
+    {"lat": 1.3502, "lng": 103.8742, "timestamp": "2026-10-08T18:35:00+08:00", "note": "Still waiting"},
+    {"lat": 1.3503, "lng": 103.8745, "timestamp": "2026-10-08T18:36:00+08:00", "note": "Departed (cancelled)"}
+  ],
+  "rider_gps_at_pickup": [
+    {"lat": 1.3490, "lng": 103.8732, "timestamp": "2026-10-08T18:25:00+08:00", "note": "At NEX mall food court"},
+    {"lat": 1.3490, "lng": 103.8732, "timestamp": "2026-10-08T18:30:00+08:00", "note": "Still at food court"},
+    {"lat": 1.3490, "lng": 103.8732, "timestamp": "2026-10-08T18:33:00+08:00", "note": "Still at food court"},
+    {"lat": 1.3492, "lng": 103.8735, "timestamp": "2026-10-08T18:35:00+08:00", "note": "Walking towards exit"},
+    {"lat": 1.3500, "lng": 103.8740, "timestamp": "2026-10-08T18:37:00+08:00", "note": "Approaching MRT (driver already left)"}
+  ],
+  "rider_distance_from_pickup_m": 120,
+  "chat_logs": [
+    {"sender": "system", "timestamp": "2026-10-08T18:30:00+08:00", "message": "Driver has arrived at Serangoon MRT, taxi stand."},
+    {"sender": "driver", "timestamp": "2026-10-08T18:30:05+08:00", "message": "I've arrived at Serangoon MRT, pickup is at the taxi stand."},
+    {"sender": "rider", "timestamp": "2026-10-08T18:31:30+08:00", "message": "Coming in 2 min, just finishing up"},
+    {"sender": "driver", "timestamp": "2026-10-08T18:33:00+08:00", "message": "I'm still waiting, where are you?"},
+    {"sender": "rider", "timestamp": "2026-10-08T18:34:00+08:00", "message": "Sorry, just finishing my food, coming now. Give me 2 more minutes."},
+    {"sender": "driver", "timestamp": "2026-10-08T18:35:30+08:00", "message": "I've been waiting 5 minutes already."},
+    {"sender": "driver", "timestamp": "2026-10-08T18:36:00+08:00", "message": "I've waited 6 minutes now. I have to cancel. The no-show fee will apply."},
+    {"sender": "rider", "timestamp": "2026-10-08T18:37:00+08:00", "message": "No wait, I'm almost there! I can see the taxi stand!"},
+    {"sender": "system", "timestamp": "2026-10-08T18:36:05+08:00", "message": "Trip cancelled by driver. No-show fee of $5.00 applied."}
+  ],
+  "fare_breakdown": {
+    "base_fare": 0.00,
+    "distance_charge": 0.00,
+    "distance_km": 0,
+    "distance_rate_per_km": 0.75,
+    "time_charge": 0.00,
+    "time_min": 0,
+    "time_rate_per_min": 0.15,
+    "subtotal": 0.00,
+    "surge_multiplier": 1.0,
+    "surge_charge": 0.00,
+    "promo_discount": 0.00,
+    "cancellation_fee": 5.00,
+    "total": 5.00,
+    "currency": "SGD"
+  },
+  "rider_profile": {
+    "rider_id": "R-4421",
+    "name": "Janelle W.",
+    "account_age_days": 120,
+    "rating": 4.3,
+    "total_rides": 18,
+    "past_disputes": [
+      {
+        "dispute_id": "NS-2026-0003",
+        "type": "no_show",
+        "outcome": "no_action",
+        "amount": 5.00,
+        "date": "2026-08-10"
+      },
+      {
+        "dispute_id": "NS-2026-0008",
+        "type": "no_show",
+        "outcome": "no_action",
+        "amount": 5.00,
+        "date": "2026-09-01"
+      }
+    ]
+  },
+  "driver_profile": {
+    "driver_id": "D-3301",
+    "name": "Raymond K.",
+    "account_age_days": 600,
+    "rating": 4.7,
+    "total_rides": 1850,
+    "completion_rate": 0.95,
+    "past_disputes": []
+  }
+}

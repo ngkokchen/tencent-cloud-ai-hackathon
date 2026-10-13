@@ -1,0 +1,114 @@
+{
+  "dispute": {
+    "dispute_id": "RD-2026-002",
+    "dispute_type": "route_deviation",
+    "filed_by": "rider",
+    "filed_at": "2026-10-08T10:15:00+08:00",
+    "ride_id": "RIDE-7899",
+    "claim": "Driver took a longer route from Bugis to Jurong East via CTE/BKE instead of the recommended PIE route. Fare was $22.10 instead of expected $19.63.",
+    "requested_remedy": {
+      "type": "refund",
+      "amount": 2.47,
+      "reason": "Route was longer than recommended without clear justification"
+    }
+  },
+  "trip": {
+    "ride_id": "RIDE-7899",
+    "status": "completed",
+    "pickup": {
+      "lat": 1.3007,
+      "lng": 103.8553,
+      "address": "Bugis Junction, Singapore",
+      "timestamp": "2026-10-08T09:20:00+08:00"
+    },
+    "dropoff": {
+      "lat": 1.3336,
+      "lng": 103.7436,
+      "address": "JCube, Jurong East, Singapore",
+      "timestamp": "2026-10-08T09:58:00+08:00"
+    },
+    "estimated_duration_min": 30,
+    "actual_duration_min": 38,
+    "estimated_distance_km": 15.5,
+    "actual_distance_km": 17.2,
+    "deviation_pct": 10.97,
+    "optimal_route": [
+      {"lat": 1.3007, "lng": 103.8553, "timestamp": "2026-10-08T09:20:00+08:00", "note": "Bugis start"},
+      {"lat": 1.3050, "lng": 103.8400, "timestamp": "2026-10-08T09:23:00+08:00", "note": "Rochor Road"},
+      {"lat": 1.3100, "lng": 103.8150, "timestamp": "2026-10-08T09:28:00+08:00", "note": "PIE West entrance"},
+      {"lat": 1.3200, "lng": 103.7750, "timestamp": "2026-10-08T09:35:00+08:00", "note": "PIE West"},
+      {"lat": 1.3290, "lng": 103.7500, "timestamp": "2026-10-08T09:42:00+08:00", "note": "Jurong East exit"},
+      {"lat": 1.3336, "lng": 103.7436, "timestamp": "2026-10-08T09:50:00+08:00", "note": "Destination"}
+    ],
+    "actual_route": [
+      {"lat": 1.3007, "lng": 103.8553, "timestamp": "2026-10-08T09:20:00+08:00", "note": "Bugis start"},
+      {"lat": 1.3080, "lng": 103.8480, "timestamp": "2026-10-08T09:22:00+08:00", "note": "Bras Basah Road"},
+      {"lat": 1.3150, "lng": 103.8380, "timestamp": "2026-10-08T09:25:00+08:00", "note": "CTE on-ramp"},
+      {"lat": 1.3220, "lng": 103.8250, "timestamp": "2026-10-08T09:29:00+08:00", "note": "CTE northbound"},
+      {"lat": 1.3300, "lng": 103.8000, "timestamp": "2026-10-08T09:35:00+08:00", "note": "BKE southbound"},
+      {"lat": 1.3340, "lng": 103.7680, "timestamp": "2026-10-08T09:42:00+08:00", "note": "PIE West (joined late)"},
+      {"lat": 1.3336, "lng": 103.7436, "timestamp": "2026-10-08T09:58:00+08:00", "note": "Destination"}
+    ],
+    "traffic_conditions": {
+      "optimal_route_avg_speed_kmh": 15.0,
+      "actual_route_avg_speed_kmh": 42.0,
+      "optimal_route_congestion": "heavy",
+      "actual_route_congestion": "light",
+      "optimal_route_incidents": [
+        {
+          "type": "vehicle_breakdown",
+          "location": "PIE West near Exit 20",
+          "severity": "major",
+          "reported_at": "2026-10-08T09:10:00+08:00"
+        }
+      ],
+      "actual_route_incidents": []
+    }
+  },
+  "chat_logs": [
+    {"sender": "driver", "timestamp": "2026-10-08T09:18:00+08:00", "message": "Good morning! On my way to Bugis Junction."},
+    {"sender": "rider", "timestamp": "2026-10-08T09:19:00+08:00", "message": "Great, see you soon. I'm at the taxi stand."},
+    {"sender": "system", "timestamp": "2026-10-08T09:20:00+08:00", "message": "Trip started"},
+    {"sender": "driver", "timestamp": "2026-10-08T09:24:00+08:00", "message": "Just to let you know, PIE is very jammed this morning due to a vehicle breakdown. I'll take CTE to BKE to avoid the congestion."},
+    {"sender": "rider", "timestamp": "2026-10-08T09:25:00+08:00", "message": "OK, as long as we get there on time. How much longer will it take?"},
+    {"sender": "driver", "timestamp": "2026-10-08T09:26:00+08:00", "message": "Probably 8-10 minutes more than usual, but PIE would add 20+ minutes with the jam."},
+    {"sender": "rider", "timestamp": "2026-10-08T09:27:00+08:00", "message": "Alright, thanks for letting me know."},
+    {"sender": "system", "timestamp": "2026-10-08T09:58:00+08:00", "message": "Trip completed"},
+    {"sender": "rider", "timestamp": "2026-10-08T09:59:00+08:00", "message": "Thanks!"},
+    {"sender": "rider", "timestamp": "2026-10-08T10:10:00+08:00", "message": "Actually, looking at the fare, it seems higher than usual. I usually pay about $19 for this trip."}
+  ],
+  "fare_breakdown": {
+    "base_fare": 3.50,
+    "distance_charge": 12.90,
+    "distance_km": 17.2,
+    "distance_rate_per_km": 0.75,
+    "time_charge": 5.70,
+    "time_min": 38,
+    "time_rate_per_min": 0.15,
+    "subtotal": 22.10,
+    "surge_multiplier": 1.0,
+    "surge_charge": 0.00,
+    "promo_discount": 0.00,
+    "cancellation_fee": 0.00,
+    "total": 22.10,
+    "currency": "SGD",
+    "expected_total_optimal": 19.63
+  },
+  "rider_profile": {
+    "rider_id": "R-9912",
+    "name": "David C.",
+    "account_age_days": 210,
+    "rating": 4.6,
+    "total_rides": 43,
+    "past_disputes": []
+  },
+  "driver_profile": {
+    "driver_id": "D-5502",
+    "name": "Priya R.",
+    "account_age_days": 900,
+    "rating": 4.9,
+    "total_rides": 3200,
+    "completion_rate": 0.98,
+    "past_disputes": []
+  }
+}

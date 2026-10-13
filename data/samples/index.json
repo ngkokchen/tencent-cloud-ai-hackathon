@@ -1,0 +1,95 @@
+{
+  "version": "1.0",
+  "total_cases": 4,
+  "dispute_types": ["route_deviation", "no_show"],
+  "cases": [
+    {
+      "dispute_id": "RD-2026-001",
+      "dispute_type": "route_deviation",
+      "label": "Clear route deviation — unauthorized long route",
+      "file": "route_deviation_clear.json",
+      "route": "Chinatown -> East Coast Park",
+      "summary": "Driver went 57% longer via AYE/West Coast without rider consent or traffic justification. Rider asked about the route but driver dismissed concerns.",
+      "key_evidence": [
+        "GPS: actual route 10.2km vs optimal 6.5km (56.9% deviation)",
+        "Chat: rider questioned route, driver said 'trust me' without explanation",
+        "Traffic: optimal route was clear (35 km/h avg), no incidents",
+        "Fare: $20.04 charged vs $13.66 expected = $6.38 overcharge",
+        "Driver history: 1 prior route deviation refund + rude behavior warning"
+      ],
+      "expected_ruling": {
+        "decision": "refund",
+        "amount": 6.38,
+        "confidence_range": [0.85, 0.95],
+        "policy_basis": ["Section 1.3 (Major deviation >30%)", "Section 1.5 (No communication, upgrade tier)"],
+        "notes": "Deviation far exceeds 30% threshold. Driver did not communicate. Traffic was clear on optimal route. Clear refund case."
+      }
+    },
+    {
+      "dispute_id": "RD-2026-002",
+      "dispute_type": "route_deviation",
+      "label": "Borderline route deviation — traffic-justified detour",
+      "file": "route_deviation_borderline.json",
+      "route": "Bugis -> Jurong East",
+      "summary": "Driver took CTE/BKE (11% longer) to avoid PIE congestion from a vehicle breakdown. Driver informed rider via chat before deviating.",
+      "key_evidence": [
+        "GPS: actual 17.2km vs optimal 15.5km (10.97% deviation)",
+        "Chat: driver explained PIE jam and alternative route, rider agreed",
+        "Traffic: optimal route 15 km/h avg (heavy), actual route 42 km/h (light)",
+        "Traffic incident: vehicle breakdown on PIE near Exit 20",
+        "Fare: $22.10 charged vs $19.63 expected = $2.47 difference"
+      ],
+      "expected_ruling": {
+        "decision": "no_action",
+        "amount": 0.00,
+        "confidence_range": [0.70, 0.85],
+        "policy_basis": ["Section 1.3 (0-10% within tolerance)", "Section 1.4 (Traffic exception)"],
+        "notes": "Deviation is 10.97%, borderline. Traffic exception applies: PIE avg speed 15 km/h < 20 km/h threshold, driver communicated, alternative route < 15% longer. No refund."
+      }
+    },
+    {
+      "dispute_id": "NS-2026-001",
+      "dispute_type": "no_show",
+      "label": "Genuine no-show — rider was not at pickup",
+      "file": "no_show_genuine.json",
+      "route": "Serangoon MRT -> Hougang Mall",
+      "summary": "Rider was 120m away at NEX mall food court. Driver waited 6 minutes (exceeds 5-min minimum), attempted contact 3 times via chat. No-show fee should stand.",
+      "key_evidence": [
+        "Driver GPS: stationary at pickup for 6 min (exceeds 5-min requirement)",
+        "Rider GPS: 120m from pickup at NEX food court during entire wait period",
+        "Chat: driver contacted rider 3 times, rider admitted she was 'finishing food'",
+        "Driver history: clean record, 4.7 rating, no past disputes",
+        "Rider history: 2 prior confirmed no-shows within 90 days (recurring pattern)"
+      ],
+      "expected_ruling": {
+        "decision": "no_action",
+        "amount": 0.00,
+        "confidence_range": [0.85, 0.95],
+        "policy_basis": ["Section 2.7 (Genuine no-show — all conditions met)", "Section 2.9 (Recurring no-show pattern)"],
+        "notes": "All 4 conditions for genuine no-show are met: waited >= 5 min, attempted contact, rider not within 50m, rider didn't respond timely. Fee stands. Rider also has recurring pattern (2 prior in 90 days)."
+      }
+    },
+    {
+      "dispute_id": "NS-2026-002",
+      "dispute_type": "no_show",
+      "label": "Disputed no-show — driver left early, rider was present",
+      "file": "no_show_disputed.json",
+      "route": "Tiong Bahru MRT -> Marina Bay",
+      "summary": "Rider was at pickup since 18:58 (2 min early). Driver left after only 2 min (below 5-min requirement). Rider GPS confirms presence at pickup point. No-show fee should be refunded.",
+      "key_evidence": [
+        "Driver GPS: departed after only 2 min (violates 5-min minimum)",
+        "Rider GPS: at exact pickup coordinates from 18:58, 2 min before scheduled",
+        "Chat: rider messaged at 19:00:30 looking for driver, driver didn't respond",
+        "Driver history: new account (45 days), 3.8 rating, 82% completion, 1 prior no-show refund",
+        "Fare: $5.00 no-show fee charged incorrectly"
+      ],
+      "expected_ruling": {
+        "decision": "refund",
+        "amount": 5.00,
+        "confidence_range": [0.90, 0.98],
+        "policy_basis": ["Section 2.5 (Early departure rule — voided)", "Section 2.8 (Disputed no-show — rider present)"],
+        "notes": "Clear violation: driver left after 2 min (below 5-min minimum). Rider GPS confirms presence at pickup. Driver made no contact attempt. All conditions for refund are met. New driver with poor history."
+      }
+    }
+  ]
+}
