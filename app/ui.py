@@ -3,7 +3,7 @@ Main Streamlit page: orchestrates the full dispute resolution UI.
 
 Layout:
   Sidebar  — dispute form (sample case picker / custom filing + demo toggle)
-  Main area — evidence panel → live conversation log → final ruling → advocate cases
+  Main area — evidence panel -> live conversation log -> final ruling -> advocate cases
 """
 
 import os
@@ -21,35 +21,35 @@ from models.message import ConversationLog
 from models.ruling import Ruling
 
 
-# ─── Page entry point ───────────────────────────────────────────────
+# --- Page entry point ------------------------------------------------
 
 def main():
     st.set_page_config(
         page_title="Ryde Dispute Resolver",
-        page_icon="\u2696\ufe0f",
+        page_icon="S",
         layout="wide",
         initial_sidebar_state="expanded",
     )
     _inject_css()
 
-    # Sidebar form — returns (case_data, run_mode) or (None, mode)
+    # Sidebar form -- returns (case_data, run_mode) or (None, mode)
     case_data, run_mode = render_dispute_form()
 
-    # ── Main area ──────────────────────────────────────
-    st.title("\u2696\ufe0f Ryde Dispute Resolver")
+    # -- Main area --
+    st.title("Ryde Dispute Resolver")
     st.caption("Multi-agent autonomous dispute resolution for ride-hailing")
 
     if case_data is not None:
-        # Button was just clicked — run resolution and render progressively
+        # Button was just clicked -- run resolution and render progressively
         _run_and_render(case_data, run_mode)
     elif "resolution" in st.session_state:
-        # Results from a previous run — render instantly from session state
+        # Results from a previous run -- render instantly from session state
         _render_stored()
     else:
         _show_landing()
 
 
-# ─── CSS ────────────────────────────────────────────────────────────
+# --- CSS -------------------------------------------------------------
 
 def _inject_css():
     st.markdown(
@@ -65,31 +65,31 @@ def _inject_css():
     )
 
 
-# ─── Run resolution + progressive render ───────────────────────────
+# --- Run resolution + progressive render -----------------------------
 
 def _run_and_render(case_data: CaseData, run_mode: str):
     """Run the dispute resolution pipeline and render results step by step."""
 
-    # ── Pre-flight checks ──────────────────────────────
+    # -- Pre-flight checks --
     if run_mode == "live" and not os.getenv("LLM_API_KEY"):
         st.error(
-            "\u26a0\ufe0f **Live mode requires an LLM API key.** "
+            "**Live mode requires an LLM API key.** "
             "Set `LLM_API_KEY` in your `.env` file."
         )
         st.info(
-            "\ud83d\udca1 Switch to **Demo mode** (sidebar checkbox) to see the "
+            "Switch to **Demo mode** (sidebar checkbox) to see the "
             "full system without an API key."
         )
         return
 
-    # ── Dispute summary banner ──────────────────────────
+    # -- Dispute summary banner --
     dispute_id = case_data.dispute.get("dispute_id", "N/A")
     dispute_type = case_data.dispute.get("dispute_type", "unknown")
     type_label = dispute_type.replace("_", " ").title()
-    st.success(f"**Dispute {dispute_id}** \u2014 Type: {type_label}")
+    st.success(f"**Dispute {dispute_id}** - Type: {type_label}")
 
-    # ── Evidence panel (collapsible) ────────────────────
-    with st.expander("\ud83d\udccb Evidence Summary", expanded=False):
+    # -- Evidence panel (collapsible) --
+    with st.expander("Evidence Summary", expanded=False):
         try:
             render_evidence_panel(case_data)
         except Exception as exc:
@@ -97,15 +97,15 @@ def _run_and_render(case_data: CaseData, run_mode: str):
 
     st.markdown("---")
 
-    # ── Conversation log header ─────────────────────────
-    st.header("\ud83d\udcac Agent Conversation Log")
+    # -- Conversation log header --
+    st.header("Agent Conversation Log")
     st.caption("Every message between agents is logged in real time.")
 
-    # ── Run the resolution pipeline ─────────────────────
+    # -- Run the resolution pipeline --
     log = ConversationLog()
 
     try:
-        with st.spinner("Resolving dispute\u2026"):
+        with st.spinner("Resolving dispute..."):
             if run_mode == "live":
                 from graph.orchestrator import run_dispute_resolution
                 from llm.client import LLMClient
@@ -124,7 +124,7 @@ def _run_and_render(case_data: CaseData, run_mode: str):
         st.error(f"Resolution failed: {exc}")
         return
 
-    # ── Render messages progressively (step by step) ─────
+    # -- Render messages progressively (step by step) --
     messages = log.messages
     log_area = st.container()
 
@@ -132,7 +132,7 @@ def _run_and_render(case_data: CaseData, run_mode: str):
         with log_area:
             render_single_message(msg, i)
 
-        # Visual pacing — longer pauses for arguments/rulings
+        # Visual pacing -- longer pauses for arguments/rulings
         if msg.msg_type in ("argument", "rebuttal", "ruling"):
             time.sleep(0.4)
         elif msg.msg_type in ("tool_call", "tool_result"):
@@ -140,14 +140,14 @@ def _run_and_render(case_data: CaseData, run_mode: str):
         else:
             time.sleep(0.12)
 
-    # ── Final ruling ─────────────────────────────────────
+    # -- Final ruling --
     st.markdown("---")
-    st.header("\u2696\ufe0f Final Ruling")
+    st.header("Final Ruling")
     render_ruling_panel(ruling)
 
-    # ── Advocate case summaries ──────────────────────────
+    # -- Advocate case summaries --
     st.markdown("---")
-    st.header("\ud83d\udccb Advocate Cases")
+    st.header("Advocate Cases")
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("#### Rider Advocate")
@@ -160,7 +160,7 @@ def _run_and_render(case_data: CaseData, run_mode: str):
         if driver_reb:
             _render_rebuttal_summary(driver_reb)
 
-    # ── Persist in session state ─────────────────────────
+    # -- Persist in session state --
     st.session_state["resolution"] = {
         "ruling": ruling,
         "rider_arg": rider_arg,
@@ -172,14 +172,14 @@ def _run_and_render(case_data: CaseData, run_mode: str):
         "dispute_id": dispute_id,
     }
 
-    # ── Reset button ─────────────────────────────────────
+    # -- Reset button --
     st.markdown("---")
-    if st.button("\ud83d\udd04 Start New Dispute"):
+    if st.button("Start New Dispute"):
         st.session_state.pop("resolution", None)
         st.rerun()
 
 
-# ─── Render stored results (after page rerun) ──────────────────────
+# --- Render stored results (after page rerun) ------------------------
 
 def _render_stored():
     """Render results from session state instantly (no re-run needed)."""
@@ -195,10 +195,10 @@ def _render_stored():
     dispute_id = res.get("dispute_id", "N/A")
     dispute_type = case.dispute.get("dispute_type", "unknown")
     type_label = dispute_type.replace("_", " ").title()
-    st.success(f"**Dispute {dispute_id}** \u2014 Type: {type_label}")
+    st.success(f"**Dispute {dispute_id}** - Type: {type_label}")
 
     # Evidence panel
-    with st.expander("\ud83d\udccb Evidence Summary", expanded=False):
+    with st.expander("Evidence Summary", expanded=False):
         try:
             render_evidence_panel(case)
         except Exception as exc:
@@ -207,19 +207,19 @@ def _render_stored():
     st.markdown("---")
 
     # Conversation log (all at once)
-    st.header("\ud83d\udcac Agent Conversation Log")
+    st.header("Agent Conversation Log")
     st.caption("Every message between agents is logged in real time.")
     for i, msg in enumerate(messages):
         render_single_message(msg, i)
 
     # Ruling
     st.markdown("---")
-    st.header("\u2696\ufe0f Final Ruling")
+    st.header("Final Ruling")
     render_ruling_panel(ruling)
 
     # Advocate summaries
     st.markdown("---")
-    st.header("\ud83d\udccb Advocate Cases")
+    st.header("Advocate Cases")
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("#### Rider Advocate")
@@ -234,12 +234,12 @@ def _render_stored():
 
     # Reset button
     st.markdown("---")
-    if st.button("\ud83d\udd04 Start New Dispute"):
+    if st.button("Start New Dispute"):
         st.session_state.pop("resolution", None)
         st.rerun()
 
 
-# ─── Helper: rebuttal summary ───────────────────────────────────────
+# --- Helper: rebuttal summary ----------------------------------------
 
 def _render_rebuttal_summary(reb: Rebuttal):
     """Render a concise summary of an advocate's rebuttal."""
@@ -250,7 +250,7 @@ def _render_rebuttal_summary(reb: Rebuttal):
         st.caption(reb.reasoning)
 
 
-# ─── Helper: argument summary ──────────────────────────────────────
+# --- Helper: argument summary ----------------------------------------
 
 def _render_argument_summary(arg: Argument):
     """Render a concise summary of an advocate's structured argument."""
@@ -273,7 +273,7 @@ def _render_argument_summary(arg: Argument):
         st.json(arg.model_dump())
 
 
-# ─── Landing page ───────────────────────────────────────────────────
+# --- Landing page ----------------------------------------------------
 
 def _show_landing():
     """Informational landing page shown when no dispute is selected."""
@@ -286,9 +286,9 @@ def _show_landing():
 
         | Agent | Role | Bias |
         |-------|------|------|
-        | \ud83d\udd35 **Rider Advocate** | Gathers evidence supporting the rider's claim | Pro-rider |
-        | \ud83d\udd34 **Driver Advocate** | Gathers evidence supporting the driver's position | Pro-driver |
-        | \ud83d\udfe3 **Judge** | Weighs both cases, applies company policy, issues binding ruling | Neutral |
+        | **Rider Advocate** | Gathers evidence supporting the rider's claim | Pro-rider |
+        | **Driver Advocate** | Gathers evidence supporting the driver's position | Pro-driver |
+        | **Judge** | Weighs both cases, applies company policy, issues binding ruling | Neutral |
 
         ### Resolution process
 
@@ -296,37 +296,39 @@ def _show_landing():
             (GPS route, chat logs, fare breakdown, user history, company policy)
         2.  Each advocate builds a **structured argument** citing specific
             policy clauses and evidence items
-        3.  The **Judge** reviews both arguments, independently verifies key
-            claims via tools, and issues a ruling
+        3.  Each advocate reviews the opponent's argument and produces
+            **counterpoints** (rebuttal phase)
+        4.  The **Judge** reviews both arguments and rebuttals, independently
+            verifies key claims via tools, and issues a ruling
 
         ### Supported dispute types
 
-        - **Route deviation** \u2014 driver took a longer route than the optimal path
-        - **No-show charge** \u2014 rider disputes a no-show / cancellation fee
+        - **Route deviation** - driver took a longer route than the optimal path
+        - **No-show charge** - rider disputes a no-show / cancellation fee
 
         ### Ruling output
 
         The Judge produces:
 
-        - **Decision** \u2014 refund / compensation / no action
-        - **Amount** \u2014 dollar figure for the remedy
-        - **Confidence score** \u2014 0.0 to 1.0 (below 0.6 flags for human review)
-        - **Dual explanations** \u2014 separate natural-language reasoning for
+        - **Decision** - refund / compensation / no action
+        - **Amount** - dollar figure for the remedy
+        - **Confidence score** - 0.0 to 1.0 (below 0.6 flags for human review)
+        - **Dual explanations** - separate natural-language reasoning for
           rider and driver
 
         ---
 
-        \ud83d\udc48 **Pick a sample case or file a custom dispute from the sidebar**,
+        **Pick a sample case or file a custom dispute from the sidebar**,
         then click **Resolve Dispute**.
 
-        > \ud83d\udca1 **Demo mode** is enabled by default \u2014 you can see the full
+        > **Demo mode** is enabled by default - you can see the full
         > system without an API key. Uncheck it to use real LLM-powered agents
         > (requires `LLM_API_KEY` in `.env`).
         """
     )
 
 
-# ─── Entrypoint ────────────────────────────────────────────────────
+# --- Entrypoint ------------------------------------------------------
 
 if __name__ == "__main__":
     main()
