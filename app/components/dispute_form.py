@@ -11,8 +11,8 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
     Render the dispute selection form in the sidebar.
 
     Returns:
-        (case_data, mode) where mode is "sample" or "custom",
-        or (None, None) if nothing selected.
+        (case_data, run_mode) where run_mode is "demo" or "live",
+        or (None, "demo") if nothing selected yet.
     """
     st.sidebar.title("Ryde Dispute Resolver")
     st.sidebar.caption("Multi-agent autonomous dispute resolution")
@@ -37,7 +37,7 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
         cases = list_available_cases()
         if not cases:
             st.sidebar.warning("No sample cases found.")
-            return None, None
+            return None, "demo"
 
         labels = [
             f"{c['dispute_id']} — {c['label']}"

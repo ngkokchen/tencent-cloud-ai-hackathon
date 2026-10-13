@@ -78,6 +78,23 @@ streamlit run app/ui.py
 
 Open http://localhost:8501, pick a sample case from the sidebar, and click **Resolve Dispute**.
 
+### Docker
+
+```bash
+docker compose up --build
+```
+
+The app will be available at http://localhost:8501. To use live mode, mount your `.env` file (already handled by docker-compose.yml).
+
+### Running Tests
+
+```bash
+pip install pytest
+pytest tests/ -v
+```
+
+All 18 tests run in demo mode (no API key needed).
+
 ### Live Mode (with real LLM)
 
 1. Copy `.env.example` to `.env`:
@@ -86,7 +103,7 @@ Open http://localhost:8501, pick a sample case from the sidebar, and click **Res
    ```
 2. Set your LLM credentials:
    ```env
-   LLM_API_BASE=https://api.hunyuan.tencentcloudapi.com/v1   # Tencent Hunyuan
+   LLM_API_BASE=https://api.hunyuan.cloud.tencent.com/v1   # Tencent Hunyuan
    LLM_API_KEY=your-api-key
    LLM_MODEL=hunyuan-pro
    ```
@@ -119,9 +136,9 @@ Works with any OpenAI-compatible endpoint (Tencent Hunyuan, OpenAI, DeepSeek, et
 │   └── prompts/
 │       ├── rider_advocate.md    # Pro-rider system prompt
 │       ├── driver_advocate.md   # Pro-driver system prompt
-│       ├── rider_rebuttal.md     # Rider rebuttal instructions
-│       ├── driver_rebuttal.md    # Driver rebuttal instructions
-│       └── judge.md              # Neutral judge system prompt
+│       ├── rider_rebuttal.md    # Rider rebuttal instructions
+│       ├── driver_rebuttal.md   # Driver rebuttal instructions
+│       └── judge.md             # Neutral judge system prompt
 ├── app/
 │   ├── ui.py                    # Main Streamlit page
 │   └── components/
@@ -157,10 +174,17 @@ Works with any OpenAI-compatible endpoint (Tencent Hunyuan, OpenAI, DeepSeek, et
 ├── models/
 │   ├── message.py               # AgentMessage + ConversationLog
 │   ├── argument.py              # Argument, EvidenceItem, PolicyCitation, Rebuttal
-│   └── ruling.py               # Ruling (decision, amount, confidence, dual explanations)
+│   └── ruling.py                # Ruling (decision, amount, confidence, dual explanations)
+├── tests/
+│   ├── test_route_deviation.py  # Route deviation end-to-end tests
+│   ├── test_no_show.py          # No-show end-to-end tests
+│   └── test_message_log.py      # Message logging verification
 ├── .env.example
 ├── .gitignore
+├── .dockerignore
 ├── ARCHITECTURE.md
+├── Dockerfile                   # Container deployment
+├── docker-compose.yml           # One-command deploy
 ├── requirements.txt
 └── run.py
 ```
@@ -171,7 +195,7 @@ Works with any OpenAI-compatible endpoint (Tencent Hunyuan, OpenAI, DeepSeek, et
 
 | Component | Technology |
 |-----------|-----------|
-| Language | Python 3.12+ |
+| Language | Python 3.11+ |
 | Agent Framework | LangGraph (diamond state machine) |
 | LLM Provider | Tencent Cloud Hunyuan (OpenAI-compatible) |
 | Data Models | Pydantic v2 |
