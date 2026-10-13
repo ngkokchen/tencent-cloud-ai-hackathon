@@ -557,6 +557,12 @@ def _build_demo_rider_rebuttal(case, rider_arg, driver_arg, route, chat, fare):
                 "Driver did not respond to rider's messages — "
                 "contact was not genuinely attempted."
             )
+        if not counterpoints:
+            counterpoints.append(
+                "Driver failed to meet the burden of proof for a valid "
+                "no-show charge — the rider's presence and timeline "
+                "contradict the driver's claim."
+            )
         revised_claim = rider_arg.claim
         revised_remedy = rider_arg.requested_remedy
         revised_amount = rider_arg.requested_amount
@@ -625,6 +631,12 @@ def _build_demo_driver_rebuttal(case, rider_arg, driver_arg, route, chat, fare):
             counterpoints.append(
                 "Driver attempted to contact the rider via chat — "
                 "all contact requirements were met."
+            )
+        if not counterpoints:
+            counterpoints.append(
+                "Driver acted in good faith and believed the rider was not "
+                "present — the no-show fee was applied per standard protocol "
+                "(Section 1.6, good-faith defense)."
             )
         revised_claim = driver_arg.claim
         revised_remedy = driver_arg.requested_remedy
