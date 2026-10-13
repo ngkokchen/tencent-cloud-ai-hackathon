@@ -18,6 +18,7 @@ MSG_TYPE_ICONS = {
     "tool_result": "RESULT",
     "reasoning": "THINK",
     "argument": "ARGUMENT",
+    "rebuttal": "REBUTTAL",
     "ruling": "RULING",
     "system": "SYS",
 }
@@ -42,7 +43,7 @@ def render_single_message(msg: AgentMessage, idx: int) -> None:
         label = f"[{timestamp_str}] {colors['label']} — {tool_name} result"
         with st.expander(label, expanded=False):
             st.code(content, language="json")
-    elif msg.msg_type in ("argument", "ruling"):
+    elif msg.msg_type in ("argument", "rebuttal", "ruling"):
         # Arguments and rulings get highlighted boxes
         st.markdown(
             f"""<div style="border-left: 3px solid {colors['primary']};

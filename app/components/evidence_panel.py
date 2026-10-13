@@ -4,6 +4,7 @@ import streamlit as st
 
 from evidence.loaders import CaseData
 from graph.tools import get_route_analysis, get_fare_breakdown
+from app.components.route_map import render_route_map
 
 
 def render_evidence_panel(case: CaseData) -> None:
@@ -11,6 +12,11 @@ def render_evidence_panel(case: CaseData) -> None:
     st.markdown("### Evidence summary")
 
     trip_id = case.trip.get("ride_id", case.dispute.get("ride_id", ""))
+
+    # ─── Route map ──────────────────────────────────────
+    if case.trip.get("optimal_route") or case.trip.get("actual_route"):
+        st.markdown("#### Route visualization")
+        render_route_map(case)
 
     # ─── Trip overview ───────────────────────────────────
     col1, col2, col3, col4 = st.columns(4)

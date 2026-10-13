@@ -31,3 +31,13 @@ class Argument(BaseModel):
     # Track which tools were called
     tools_called: list[str] = Field(default_factory=list)
     tool_reasoning: str = ""     # why these tools were selected
+
+
+class Rebuttal(BaseModel):
+    """An advocate's rebuttal after seeing the opposing argument."""
+    agent: str                     # "rider_advocate" or "driver_advocate"
+    counterpoints: list[str] = Field(default_factory=list)
+    revised_claim: str = ""
+    revised_remedy: str = ""       # may differ from original
+    revised_amount: float = 0.0
+    reasoning: str = ""

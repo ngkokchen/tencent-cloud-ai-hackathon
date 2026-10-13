@@ -12,7 +12,7 @@ class AgentMessage(BaseModel):
     recipient: Literal["rider_advocate", "driver_advocate", "judge", "all"] = "all"
     msg_type: Literal[
         "tool_call", "tool_result", "reasoning",
-        "argument", "ruling", "system",
+        "argument", "rebuttal", "ruling", "system",
     ]
     content: str
     metadata: dict = Field(default_factory=dict)

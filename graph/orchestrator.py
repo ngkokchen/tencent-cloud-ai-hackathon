@@ -2,8 +2,13 @@
 Orchestrator: runs the full multi-agent dispute resolution pipeline.
 
 Two modes:
-  - Live mode: real LLM calls via RiderAdvocate / DriverAdvocate / Judge
+  - Live mode: LangGraph state machine with parallel advocates + rebuttal
   - Demo mode: rule-based mock outputs (no LLM needed) for UI demos
+
+Both modes follow the same 3-phase diamond topology:
+    Phase 1: Rider Advocate ∥ Driver Advocate (gather evidence, build arguments)
+    Phase 2: Rider Rebuttal ∥ Driver Rebuttal (counter the opposing argument)
+    Phase 3: Judge (weigh both arguments + rebuttals, issue ruling)
 """
 
 import json
@@ -16,53 +21,28 @@ from graph.tools import (
     get_user_history, get_policy,
 )
 from llm.client import LLMClient
-from models.argument import Argument, EvidenceItem, PolicyCitation
+from models.argument import Argument, EvidenceItem, PolicyCitation, Rebuttal
 from models.message import ConversationLog
 from models.ruling import Ruling
 
 
-# ─── Live mode ──────────────────────────────────────────────────────
+# ─── Live mode (LangGraph) ──────────────────────────────────────────
 
 def run_dispute_resolution(
     case_data: CaseData,
     llm: LLMClient,
     log: ConversationLog,
-) -> tuple[Ruling, Argument, Argument]:
+) -> tuple[Ruling, Argument, Argument, Rebuttal, Rebuttal]:
     """
-    Run the full pipeline with real LLM calls.
+    Run the full LangGraph pipeline with real LLM calls.
+    Uses the diamond-shaped state graph with parallel advocates,
+    a rebuttal phase, and a judge.
 
-    Returns (ruling, rider_argument, driver_argument).
+    Returns (ruling, rider_argument, driver_argument,
+             rider_rebuttal, driver_rebuttal).
     """
-    from agents.rider_advocate import RiderAdvocate
-    from agents.driver_advocate import DriverAdvocate
-    from agents.judge import Judge
-
-    trip_id = case_data.trip.get("ride_id", case_data.dispute.get("ride_id", ""))
-
-    log.log("system", "system",
-            f"Dispute {case_data.dispute.get('dispute_id', 'N/A')} loaded. "
-            f"Trip: {trip_id}. Starting multi-agent resolution...")
-
-    # Phase 1: Rider Advocate
-    log.log("system", "system", "Phase 1: Rider Advocate gathering evidence...")
-    rider_adv = RiderAdvocate(llm, log)
-    rider_arg = rider_adv.run(case_data)
-
-    # Phase 2: Driver Advocate
-    log.log("system", "system", "Phase 2: Driver Advocate gathering evidence...")
-    driver_adv = DriverAdvocate(llm, log)
-    driver_arg = driver_adv.run(case_data)
-
-    # Phase 3: Judge
-    log.log("system", "system", "Phase 3: Judge reviewing both cases...")
-    judge = Judge(llm, log)
-    ruling = judge.run(case_data, rider_arg, driver_arg)
-
-    log.log("system", "system",
-            f"Resolution complete. Ruling: {ruling.ruling}, "
-            f"amount: ${ruling.amount:.2f}, confidence: {ruling.confidence:.2f}")
-
-    return ruling, rider_arg, driver_arg
+    from graph.langgraph_orchestrator import run_dispute_resolution as _run
+    return _run(case_data, llm, log)
 
 
 # ─── Demo mode (no LLM needed) ──────────────────────────────────────
@@ -71,11 +51,14 @@ def run_demo_resolution(
     case_data: CaseData,
     log: ConversationLog,
     delay: float = 0.4,
-) -> tuple[Ruling, Argument, Argument]:
+) -> tuple[Ruling, Argument, Argument, Rebuttal, Rebuttal]:
     """
     Run with rule-based mock outputs. Calls real tools for evidence
-    analysis but generates arguments/rulings without LLM calls.
+    analysis but generates arguments/rebuttals/rulings without LLM calls.
     Useful for UI demos without an API key.
+
+    Returns (ruling, rider_argument, driver_argument,
+             rider_rebuttal, driver_rebuttal).
     """
     trip_id = case_data.trip.get("ride_id", case_data.dispute.get("ride_id", ""))
     rider_id = case_data.rider_profile.get("rider_id", "")
@@ -162,8 +145,42 @@ def run_demo_resolution(
             metadata={"claim": driver_arg.claim, "remedy": driver_arg.requested_remedy,
                       "amount": driver_arg.requested_amount})
 
-    # ── Judge phase ──────────────────────────────────────
-    log.log("judge", "reasoning", "Reviewing both advocates' arguments...")
+    # ── Phase 2: Rebuttal phase (parallel) ───────────────
+    log.log("system", "system",
+            "Phase 2: Rebuttal phase — advocates respond to each other's arguments...")
+    time.sleep(delay)
+
+    log.log("rider_advocate", "reasoning",
+            "Reviewing the Driver Advocate's argument for rebuttal...")
+    time.sleep(delay)
+    rider_rebuttal = _build_demo_rider_rebuttal(
+        case_data, rider_arg, driver_arg,
+        route_result, chat_result, fare_result)
+    log.log("rider_advocate", "rebuttal",
+            json.dumps({"counterpoints": rider_rebuttal.counterpoints,
+                        "revised_claim": rider_rebuttal.revised_claim},
+                       indent=2),
+            metadata={"type": "rebuttal",
+                      "counterpoints": len(rider_rebuttal.counterpoints)})
+    time.sleep(delay)
+
+    log.log("driver_advocate", "reasoning",
+            "Reviewing the Rider Advocate's argument for rebuttal...")
+    time.sleep(delay)
+    driver_rebuttal = _build_demo_driver_rebuttal(
+        case_data, rider_arg, driver_arg,
+        route_result, chat_result, fare_result)
+    log.log("driver_advocate", "rebuttal",
+            json.dumps({"counterpoints": driver_rebuttal.counterpoints,
+                        "revised_claim": driver_rebuttal.revised_claim},
+                       indent=2),
+            metadata={"type": "rebuttal",
+                      "counterpoints": len(driver_rebuttal.counterpoints)})
+    time.sleep(delay)
+
+    # ── Phase 3: Judge phase ──────────────────────────────
+    log.log("judge", "reasoning",
+            "Reviewing both advocates' arguments and rebuttals...")
     time.sleep(delay)
     verify_tools = ["get_route_analysis", "get_fare_breakdown", "get_policy"]
     log.log("judge", "reasoning",
@@ -202,7 +219,7 @@ def run_demo_resolution(
             f"Resolution complete. Ruling: {ruling.ruling}, "
             f"amount: ${ruling.amount:.2f}, confidence: {ruling.confidence:.2f}")
 
-    return ruling, rider_arg, driver_arg
+    return ruling, rider_arg, driver_arg, rider_rebuttal, driver_rebuttal
 
 
 def _demo_call_tool(log, agent, tool_name, args, fn):
@@ -488,4 +505,138 @@ def _build_demo_ruling(case, route, chat, fare, rider_hist, driver_hist,
         policy_applied=policy_applied,
         tools_called=["get_route_analysis", "get_fare_breakdown", "get_policy"],
         verification_notes="Independently verified GPS deviation, fare calculation, and policy applicability.",
+    )
+
+
+# ─── Demo rebuttal generators ──────────────────────────────────────
+
+def _build_demo_rider_rebuttal(case, rider_arg, driver_arg, route, chat, fare):
+    """Generate a realistic pro-rider rebuttal from the driver's argument."""
+    dispute_type = case.dispute.get("dispute_type", "")
+    counterpoints = []
+
+    if dispute_type == "route_deviation":
+        if route.get("traffic_exception_applies", False):
+            counterpoints.append(
+                "Driver cites traffic, but GPS data shows the optimal route had "
+                "light congestion — the detour was unnecessary."
+            )
+        else:
+            counterpoints.append(
+                "Driver's claim of acceptable deviation is false — "
+                f"{route.get('extra_distance_pct', 0)}% exceeds all tolerance thresholds."
+            )
+        if not chat.get("driver_responded_to_rider", False):
+            counterpoints.append(
+                "Driver claims good communication, but chat logs show "
+                "they never responded to the rider's route questions (Section 1.5)."
+            )
+        overcharge = fare.get("overcharge_amount", 0)
+        counterpoints.append(
+            f"Fare impact is not minimal — ${overcharge:.2f} overcharge "
+            "directly resulted from the unauthorized deviation."
+        )
+        revised_claim = rider_arg.claim
+        revised_remedy = rider_arg.requested_remedy
+        revised_amount = rider_arg.requested_amount
+    else:  # no_show
+        wait_min = case.trip.get("driver_wait_time_min", 0)
+        rider_dist = case.raw.get("rider_distance_from_pickup_m", 999)
+        if wait_min < 5:
+            counterpoints.append(
+                f"Driver waited only {wait_min} minutes — Section 2.5 requires "
+                "a minimum 5-minute wait before leaving."
+            )
+        if rider_dist <= 50:
+            counterpoints.append(
+                f"Rider was {rider_dist}m from pickup — within the 50m radius. "
+                "This was not a genuine no-show (Section 2.8)."
+            )
+        if not chat.get("driver_responded_to_rider", False):
+            counterpoints.append(
+                "Driver did not respond to rider's messages — "
+                "contact was not genuinely attempted."
+            )
+        revised_claim = rider_arg.claim
+        revised_remedy = rider_arg.requested_remedy
+        revised_amount = rider_arg.requested_amount
+
+    return Rebuttal(
+        agent="rider_advocate",
+        counterpoints=counterpoints,
+        revised_claim=revised_claim,
+        revised_remedy=revised_remedy,
+        revised_amount=revised_amount,
+        reasoning=f"After reviewing the driver's argument, {len(counterpoints)} "
+                  "key counterpoints undermine their position. The original "
+                  "remedy stands.",
+    )
+
+
+def _build_demo_driver_rebuttal(case, rider_arg, driver_arg, route, chat, fare):
+    """Generate a realistic pro-driver rebuttal from the rider's argument."""
+    dispute_type = case.dispute.get("dispute_type", "")
+    counterpoints = []
+
+    if dispute_type == "route_deviation":
+        if route.get("traffic_exception_applies", False):
+            counterpoints.append(
+                "Rider cites deviation percentage, but Section 1.4 traffic "
+                "exception applies — the optimal route was heavily congested."
+            )
+        else:
+            dev = route.get("extra_distance_pct", 0)
+            if dev <= 15:
+                counterpoints.append(
+                    f"Rider exaggerates the impact — {dev}% deviation is within "
+                    "the minor tolerance band (Section 1.3)."
+                )
+            else:
+                counterpoints.append(
+                    "Rider focuses on deviation but ignores that the driver "
+                    "acted in good faith (Section 1.6)."
+                )
+        if chat.get("driver_initiated_contact", False):
+            counterpoints.append(
+                "Driver proactively communicated with the rider — "
+                "the rider was informed of the route change."
+            )
+        counterpoints.append(
+            "Driver has a strong record with no prior route deviation "
+            "complaints — this was an isolated incident."
+        )
+        revised_claim = driver_arg.claim
+        revised_remedy = driver_arg.requested_remedy
+        revised_amount = driver_arg.requested_amount
+    else:  # no_show
+        wait_min = case.trip.get("driver_wait_time_min", 0)
+        rider_dist = case.raw.get("rider_distance_from_pickup_m", 999)
+        if wait_min >= 5:
+            counterpoints.append(
+                f"Driver waited {wait_min} minutes — exceeding the 5-minute "
+                "requirement (Section 2.3). The no-show fee is valid."
+            )
+        if rider_dist > 50:
+            counterpoints.append(
+                f"Rider was {rider_dist}m from pickup — well beyond the 50m "
+                "radius. This qualifies as a genuine no-show (Section 2.7)."
+            )
+        if chat.get("driver_initiated_contact", False):
+            counterpoints.append(
+                "Driver attempted to contact the rider via chat — "
+                "all contact requirements were met."
+            )
+        revised_claim = driver_arg.claim
+        revised_remedy = driver_arg.requested_remedy
+        revised_amount = driver_arg.requested_amount
+
+    return Rebuttal(
+        agent="driver_advocate",
+        counterpoints=counterpoints,
+        revised_claim=revised_claim,
+        revised_remedy=revised_remedy,
+        revised_amount=revised_amount,
+        reasoning=f"After reviewing the rider's argument, {len(counterpoints)} "
+                  "key counterpoints support the driver. The original "
+                  "remedy stands.",
     )

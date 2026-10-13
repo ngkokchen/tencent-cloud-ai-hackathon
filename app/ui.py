@@ -16,7 +16,7 @@ from app.components.message_log import render_single_message
 from app.components.ruling_panel import render_ruling_panel
 from app.components.evidence_panel import render_evidence_panel
 from evidence.loaders import CaseData
-from models.argument import Argument
+from models.argument import Argument, Rebuttal
 from models.message import ConversationLog
 from models.ruling import Ruling
 
@@ -111,14 +111,14 @@ def _run_and_render(case_data: CaseData, run_mode: str):
                 from llm.client import LLMClient
 
                 llm = LLMClient()
-                ruling, rider_arg, driver_arg = run_dispute_resolution(
-                    case_data, llm, log
+                ruling, rider_arg, driver_arg, rider_reb, driver_reb = (
+                    run_dispute_resolution(case_data, llm, log)
                 )
             else:
                 from graph.orchestrator import run_demo_resolution
 
-                ruling, rider_arg, driver_arg = run_demo_resolution(
-                    case_data, log, delay=0
+                ruling, rider_arg, driver_arg, rider_reb, driver_reb = (
+                    run_demo_resolution(case_data, log, delay=0)
                 )
     except Exception as exc:
         st.error(f"Resolution failed: {exc}")
@@ -133,7 +133,7 @@ def _run_and_render(case_data: CaseData, run_mode: str):
             render_single_message(msg, i)
 
         # Visual pacing — longer pauses for arguments/rulings
-        if msg.msg_type in ("argument", "ruling"):
+        if msg.msg_type in ("argument", "rebuttal", "ruling"):
             time.sleep(0.4)
         elif msg.msg_type in ("tool_call", "tool_result"):
             time.sleep(0.15)
@@ -152,15 +152,21 @@ def _run_and_render(case_data: CaseData, run_mode: str):
     with col1:
         st.markdown("#### Rider Advocate")
         _render_argument_summary(rider_arg)
+        if rider_reb:
+            _render_rebuttal_summary(rider_reb)
     with col2:
         st.markdown("#### Driver Advocate")
         _render_argument_summary(driver_arg)
+        if driver_reb:
+            _render_rebuttal_summary(driver_reb)
 
     # ── Persist in session state ─────────────────────────
     st.session_state["resolution"] = {
         "ruling": ruling,
         "rider_arg": rider_arg,
         "driver_arg": driver_arg,
+        "rider_reb": rider_reb,
+        "driver_reb": driver_reb,
         "messages": messages,
         "case": case_data,
         "dispute_id": dispute_id,
@@ -182,6 +188,8 @@ def _render_stored():
     ruling: Ruling = res["ruling"]
     rider_arg: Argument = res["rider_arg"]
     driver_arg: Argument = res["driver_arg"]
+    rider_reb: Rebuttal | None = res.get("rider_reb")
+    driver_reb: Rebuttal | None = res.get("driver_reb")
     messages = res["messages"]
 
     dispute_id = res.get("dispute_id", "N/A")
@@ -216,15 +224,30 @@ def _render_stored():
     with col1:
         st.markdown("#### Rider Advocate")
         _render_argument_summary(rider_arg)
+        if rider_reb:
+            _render_rebuttal_summary(rider_reb)
     with col2:
         st.markdown("#### Driver Advocate")
         _render_argument_summary(driver_arg)
+        if driver_reb:
+            _render_rebuttal_summary(driver_reb)
 
     # Reset button
     st.markdown("---")
     if st.button("\ud83d\udd04 Start New Dispute"):
         st.session_state.pop("resolution", None)
         st.rerun()
+
+
+# ─── Helper: rebuttal summary ───────────────────────────────────────
+
+def _render_rebuttal_summary(reb: Rebuttal):
+    """Render a concise summary of an advocate's rebuttal."""
+    st.markdown("**Rebuttal:**")
+    for cp in reb.counterpoints:
+        st.markdown(f"- {cp}")
+    if reb.reasoning:
+        st.caption(reb.reasoning)
 
 
 # ─── Helper: argument summary ──────────────────────────────────────

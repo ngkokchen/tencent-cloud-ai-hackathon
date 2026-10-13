@@ -4,7 +4,7 @@ import json
 
 from agents.base import BaseAgent, load_prompt
 from evidence.loaders import CaseData
-from models.argument import Argument, EvidenceItem, PolicyCitation
+from models.argument import Argument, EvidenceItem, PolicyCitation, Rebuttal
 
 
 class DriverAdvocate(BaseAgent):
@@ -91,6 +91,57 @@ class DriverAdvocate(BaseAgent):
         )
 
         return argument
+
+    def rebut(self, case: CaseData, own_argument: Argument,
+              opponent_argument: Argument) -> Rebuttal:
+        """
+        Rebuttal phase: respond to the Rider Advocate's argument.
+        Produces a structured Rebuttal with counterpoints.
+        """
+        self._log("reasoning",
+                  "Reviewing the Rider Advocate's argument for rebuttal...")
+
+        rebuttal_prompt_text = load_prompt("driver_rebuttal")
+        user_msg = (
+            f"## Your Initial Argument\n"
+            f"Claim: {own_argument.claim}\n"
+            f"Remedy: {own_argument.requested_remedy} "
+            f"${own_argument.requested_amount:.2f}\n\n"
+            f"## Rider Advocate's Argument (to rebut)\n"
+            f"Claim: {opponent_argument.claim}\n"
+            f"Remedy: {opponent_argument.requested_remedy} "
+            f"${opponent_argument.requested_amount:.2f}\n"
+            f"Evidence: "
+            + "; ".join(f"[{e.source}] {e.fact}" for e in opponent_argument.evidence)
+            + "\n"
+            f"Policy cited: "
+            + "; ".join(f"{p.clause}: {p.title}" for p in opponent_argument.policy_cited)
+            + "\n\n"
+            f"## Your Task\n"
+            f"Produce your rebuttal as JSON per your instructions."
+        )
+
+        original_prompt = self.system_prompt
+        self.system_prompt = rebuttal_prompt_text
+        result = self.llm_analyze(user_msg, temperature=0.3)
+        self.system_prompt = original_prompt
+
+        rebuttal = Rebuttal(
+            agent="driver_advocate",
+            counterpoints=result.get("counterpoints", []),
+            revised_claim=result.get("revised_claim", own_argument.claim),
+            revised_remedy=result.get("revised_remedy",
+                                      own_argument.requested_remedy),
+            revised_amount=float(result.get("revised_amount",
+                                            own_argument.requested_amount)),
+            reasoning=result.get("reasoning", ""),
+        )
+
+        self._log("rebuttal",
+                  json.dumps(result, indent=2, ensure_ascii=False),
+                  metadata={"type": "rebuttal",
+                            "counterpoints": len(rebuttal.counterpoints)})
+        return rebuttal
 
     def _build_summary(self, case: CaseData) -> str:
         """Build a concise dispute summary for the LLM."""

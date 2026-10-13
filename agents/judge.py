@@ -4,15 +4,14 @@ import json
 
 from agents.base import BaseAgent, load_prompt
 from evidence.loaders import CaseData
-from models.argument import Argument
+from models.argument import Argument, PolicyCitation, Rebuttal
 from models.ruling import Ruling
-from models.argument import PolicyCitation
 
 
 class Judge(BaseAgent):
     """
-    Neutral arbiter. Receives both advocates' arguments, independently
-    verifies key evidence via tools, applies policy, and outputs a
+    Neutral arbiter. Receives both advocates' arguments (and optional rebuttals),
+    independently verifies key evidence via tools, applies policy, and outputs a
     structured Ruling with dual explanations.
     """
 
@@ -30,6 +29,8 @@ class Judge(BaseAgent):
         case: CaseData,
         rider_argument: Argument,
         driver_argument: Argument,
+        rider_rebuttal: Rebuttal | None = None,
+        driver_rebuttal: Rebuttal | None = None,
     ) -> Ruling:
         """
         Execute the judge pipeline:
@@ -43,9 +44,10 @@ class Judge(BaseAgent):
         driver_id = case.driver_profile.get("driver_id", "")
         dispute_type = case.dispute.get("dispute_type", "")
 
-        # ── Step 1: Build summary of both arguments ──────────
+        # ── Step 1: Build summary of both arguments + rebuttals ──
         args_summary = self._build_arguments_summary(
-            case, rider_argument, driver_argument
+            case, rider_argument, driver_argument,
+            rider_rebuttal, driver_rebuttal,
         )
 
         # ── Step 2: LLM decides which tools to call for verification ──
@@ -111,8 +113,10 @@ class Judge(BaseAgent):
         case: CaseData,
         rider_arg: Argument,
         driver_arg: Argument,
+        rider_rebuttal: Rebuttal | None = None,
+        driver_rebuttal: Rebuttal | None = None,
     ) -> str:
-        """Build a summary of both advocates' arguments for the LLM."""
+        """Build a summary of both advocates' arguments (and rebuttals) for the LLM."""
 
         # Rider advocate's case
         rider_evidence = "\n".join(
@@ -133,6 +137,31 @@ class Judge(BaseAgent):
             f"  - {p.clause}: {p.title} — {p.relevance}"
             for p in driver_arg.policy_cited
         )
+
+        # Build rebuttal sections
+        rider_rebuttal_text = ""
+        if rider_rebuttal:
+            rider_rebuttal_text = (
+                f"## Rider Advocate's Rebuttal\n"
+                f"Counterpoints:\n"
+                + "\n".join(f"  - {cp}" for cp in rider_rebuttal.counterpoints)
+                + f"\nRevised claim: {rider_rebuttal.revised_claim}\n"
+                f"Revised remedy: {rider_rebuttal.revised_remedy} "
+                f"${rider_rebuttal.revised_amount:.2f}\n"
+                f"Reasoning: {rider_rebuttal.reasoning}\n\n"
+            )
+
+        driver_rebuttal_text = ""
+        if driver_rebuttal:
+            driver_rebuttal_text = (
+                f"## Driver Advocate's Rebuttal\n"
+                f"Counterpoints:\n"
+                + "\n".join(f"  - {cp}" for cp in driver_rebuttal.counterpoints)
+                + f"\nRevised claim: {driver_rebuttal.revised_claim}\n"
+                f"Revised remedy: {driver_rebuttal.revised_remedy} "
+                f"${driver_rebuttal.revised_amount:.2f}\n"
+                f"Reasoning: {driver_rebuttal.reasoning}\n\n"
+            )
 
         return (
             f"## Dispute\n"
@@ -157,6 +186,8 @@ class Judge(BaseAgent):
             f"Policy cited:\n{driver_policy}\n"
             f"Reasoning: {driver_arg.reasoning}\n\n"
 
+            f"{rider_rebuttal_text}"
+            f"{driver_rebuttal_text}"
             f"## Key IDs for verification\n"
             f"Trip ID: {case.trip.get('ride_id', 'N/A')}\n"
             f"Rider ID: {case.rider_profile.get('rider_id', 'N/A')}\n"
