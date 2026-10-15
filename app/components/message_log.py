@@ -1,4 +1,4 @@
-"""Message log component: renders the conversation log as a color-coded timeline."""
+"""Message log component: renders the conversation log in a styled container."""
 
 import streamlit as st
 
@@ -32,41 +32,30 @@ AGENT_COLORS = {
     },
 }
 
-MSG_TYPE_STYLES = {
-    "tool_call": ("TOOL", "#f5f6f8", "#7c8390"),
-    "tool_result": ("RESULT", "#f5f6f8", "#7c8390"),
-    "reasoning": ("THINK", "transparent", "#7c8390"),
-    "argument": ("ARGUMENT", "transparent", "#202735"),
-    "rebuttal": ("REBUTTAL", "transparent", "#202735"),
-    "ruling": ("RULING", "transparent", "#202735"),
-    "system": ("SYS", "#f5f6f8", "#7c8390"),
-}
+
+def _should_show(msg: AgentMessage) -> bool:
+    """Return True if the message should be shown in the simplified view."""
+    # Skip raw tool calls and tool results (JSON blobs)
+    if msg.msg_type in ("tool_call", "tool_result"):
+        return False
+    return True
 
 
 def render_single_message(msg: AgentMessage, idx: int) -> None:
     """Render a single agent message as a styled card."""
-    colors = AGENT_COLORS.get(msg.sender, AGENT_COLORS["system"])
-    type_label, _type_bg, type_text = MSG_TYPE_STYLES.get(
-        msg.msg_type, (msg.msg_type.upper(), "transparent", "#7c8390")
-    )
+    if not _should_show(msg):
+        return
 
-    # Truncate long content for display
+    colors = AGENT_COLORS.get(msg.sender, AGENT_COLORS["system"])
     content = msg.content
     if len(content) > 3000:
         content = content[:3000] + "\n... [truncated]"
 
     timestamp_str = msg.timestamp.strftime("%H:%M:%S")
 
-    # Build the message card HTML
-    if msg.msg_type == "tool_result":
-        # Tool results go in an expander
-        tool_name = msg.metadata.get("tool", "unknown")
-        label = f"[{timestamp_str}] {colors['label']} — {tool_name} result"
-        with st.expander(label, expanded=False):
-            st.code(content, language="json")
-
-    elif msg.msg_type in ("argument", "rebuttal", "ruling"):
-        # Arguments and rulings get highlighted boxes
+    if msg.msg_type in ("argument", "rebuttal"):
+        # Arguments and rebuttals get highlighted boxes
+        label = "ARGUMENT" if msg.msg_type == "argument" else "REBUTTAL"
         st.markdown(
             f"""<div style="border-left: 3px solid {colors['primary']};
             background: {colors['bg']}; padding: 12px 16px; margin: 8px 0;
@@ -76,9 +65,9 @@ def render_single_message(msg: AgentMessage, idx: int) -> None:
               <span style="font-size: 11px; color: {colors['primary']};
               font-weight: 600;">
                 {colors['icon']} {colors['label']}
-                <span style="font-size: 9px; color: {type_text};
+                <span style="font-size: 9px; color: #202735;
                 margin-left: 6px; letter-spacing: 0.05em;">
-                  {type_label}
+                  {label}
                 </span>
               </span>
               <span style="font-size: 10px; color: #7c8390;
@@ -91,47 +80,20 @@ def render_single_message(msg: AgentMessage, idx: int) -> None:
             unsafe_allow_html=True,
         )
 
-    elif msg.msg_type == "reasoning":
-        # Reasoning is muted and italic
+    elif msg.msg_type == "ruling":
+        # Judge ruling
         st.markdown(
-            f"""<div style="padding: 8px 16px; margin: 2px 0;
+            f"""<div style="padding: 10px 16px; margin: 4px 0;
             border-bottom: 1px solid #f0f1f3;">
             <div style="display: flex; justify-content: space-between;
-            align-items: center;">
+            align-items: center; margin-bottom: 4px;">
               <span style="font-size: 11px; color: {colors['primary']};
-              font-weight: 500;">
+              font-weight: 600;">
                 {colors['icon']} {colors['label']}
-                <span style="font-size: 9px; color: #7c8390;
-                margin-left: 6px; background: #f5f6f8;
+                <span style="font-size: 9px; color: {colors['primary']};
+                margin-left: 6px; background: {colors['bg']};
                 padding: 1px 6px; border-radius: 3px;">
-                  {type_label}
-                </span>
-              </span>
-              <span style="font-size: 10px; color: #7c8390;
-              font-family: monospace;">{timestamp_str}</span>
-            </div>
-            <div style="font-size: 12px; color: #9a9da3; font-style: italic;
-            margin-top: 4px; line-height: 1.5;">
-              {content}
-            </div>
-            </div>""",
-            unsafe_allow_html=True,
-        )
-
-    else:
-        # tool_call and system messages — compact
-        st.markdown(
-            f"""<div style="padding: 8px 16px; margin: 2px 0;
-            border-bottom: 1px solid #f0f1f3;">
-            <div style="display: flex; justify-content: space-between;
-            align-items: center;">
-              <span style="font-size: 11px; color: {colors['primary']};
-              font-weight: 500;">
-                {colors['icon']} {colors['label']}
-                <span style="font-size: 9px; color: #7c8390;
-                margin-left: 6px; background: #f5f6f8;
-                padding: 1px 6px; border-radius: 3px;">
-                  {type_label}
+                  RULING
                 </span>
               </span>
               <span style="font-size: 10px; color: #7c8390;
@@ -145,16 +107,129 @@ def render_single_message(msg: AgentMessage, idx: int) -> None:
             unsafe_allow_html=True,
         )
 
+    elif msg.msg_type == "reasoning":
+        # Reasoning — muted italic, compact
+        st.markdown(
+            f"""<div style="padding: 8px 16px; margin: 2px 0;
+            border-bottom: 1px solid #f0f1f3;">
+            <div style="display: flex; justify-content: space-between;
+            align-items: center;">
+              <span style="font-size: 11px; color: {colors['primary']};
+              font-weight: 500;">
+                {colors['icon']} {colors['label']}
+              </span>
+              <span style="font-size: 10px; color: #7c8390;
+              font-family: monospace;">{timestamp_str}</span>
+            </div>
+            <div style="font-size: 12px; color: #9a9da3; font-style: italic;
+            margin-top: 4px; line-height: 1.5;">
+              {content}
+            </div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
 
-def render_message_log(messages: list, start_idx: int = 0) -> int:
+    else:
+        # System and other messages — compact
+        st.markdown(
+            f"""<div style="padding: 8px 16px; margin: 2px 0;
+            border-bottom: 1px solid #f0f1f3;">
+            <div style="display: flex; justify-content: space-between;
+            align-items: center;">
+              <span style="font-size: 11px; color: {colors['primary']};
+              font-weight: 500;">
+                {colors['icon']} {colors['label']}
+              </span>
+              <span style="font-size: 10px; color: #7c8390;
+              font-family: monospace;">{timestamp_str}</span>
+            </div>
+            <div style="font-size: 12px; color: #202735; margin-top: 4px;
+            line-height: 1.5;">
+              {content}
+            </div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+
+
+def render_conversation_container(messages: list, start_idx: int = 0) -> None:
     """
-    Render a list of AgentMessage objects as a color-coded timeline.
-    Returns the index of the last rendered message.
+    Render the conversation inside a styled container card.
+    Filters out tool_call and tool_result messages.
     """
+    # ─── Container header ──────────────────────────────
+    st.markdown(
+        """
+        <div style="border: 1px solid #e8ebef; border-radius: 12px;
+        background: white; margin-bottom: 20px; overflow: hidden;">
+          <div style="padding: 14px 20px; border-bottom: 1px solid #e8ebef;
+          display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: 700; color: #202735;
+            font-family: 'Manrope', sans-serif;">
+              <span style="margin-right: 8px;">&#128172;</span>Agent conversation
+            </span>
+            <span style="font-size: 10px; color: #7c8390;">
+              Every message is logged in real time
+            </span>
+          </div>
+          <div style="padding: 10px 20px; background: #f5f6f8;
+          border-bottom: 1px solid #e8ebef; display: flex; gap: 16px;">
+            <span style="font-size: 10px; color: #378ADD;">
+              <span style="display: inline-block; width: 6px; height: 6px;
+              background: #378ADD; border-radius: 50%; margin-right: 4px;"></span>
+              Rider Advocate
+            </span>
+            <span style="font-size: 10px; color: #D85A30;">
+              <span style="display: inline-block; width: 6px; height: 6px;
+              background: #D85A30; border-radius: 50%; margin-right: 4px;"></span>
+              Driver Advocate
+            </span>
+            <span style="font-size: 10px; color: #534AB7;">
+              <span style="display: inline-block; width: 6px; height: 6px;
+              background: #534AB7; border-radius: 50%; margin-right: 4px;"></span>
+              Judge
+            </span>
+          </div>
+          <div style="padding: 8px 0;">
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ─── Messages ──────────────────────────────────────
+    visible_count = 0
     for i, msg in enumerate(messages[start_idx:], start=start_idx):
         if isinstance(msg, dict):
             msg = AgentMessage(**msg)
-        render_single_message(msg, i)
+        if _should_show(msg):
+            render_single_message(msg, i)
+            visible_count += 1
+
+    # ─── Container footer ──────────────────────────────
+    st.markdown(
+        """
+          </div>
+          <div style="padding: 10px 20px; border-top: 1px solid #e8ebef;
+          display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 10px; color: #7c8390;">
+              <span style="color: #1D9E75; margin-right: 4px;">&#10003;</span>
+              Resolution complete
+            </span>
+            <span style="font-size: 10px; color: #7c8390;">
+              3 agents &middot; Demo
+            </span>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_message_log(messages: list, start_idx: int = 0) -> int:
+    """
+    Render a list of AgentMessage objects inside a conversation container.
+    Returns the index of the last rendered message.
+    """
+    render_conversation_container(messages, start_idx)
     return len(messages)
 
 
@@ -164,6 +239,5 @@ def render_message_log_streaming(log, last_idx: int = 0) -> int:
     Returns the new last_idx.
     """
     messages = log.messages
-    for i in range(last_idx, len(messages)):
-        render_single_message(messages[i], i)
+    render_conversation_container(messages, last_idx)
     return len(messages)
