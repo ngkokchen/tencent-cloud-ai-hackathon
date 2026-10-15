@@ -12,7 +12,7 @@ import time
 import streamlit as st
 
 from app.components.dispute_form import render_dispute_form
-from app.components.message_log import render_single_message
+from app.components.message_log import render_message_log
 from app.components.ruling_panel import render_ruling_panel
 from app.components.evidence_panel import render_evidence_panel
 from evidence.loaders import CaseData
@@ -142,28 +142,6 @@ def _run_and_render(case_data: CaseData, run_mode: str):
         except Exception as exc:
             st.warning(f"Evidence panel unavailable: {exc}")
 
-    st.markdown("---")
-
-    # -- Conversation log header --
-    st.markdown("""
-    <div style="display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 20px; border: 1px solid #e8ebef; border-radius: 12px;
-    background: white; margin-bottom: 12px;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="width: 28px; height: 28px; border-radius: 8px;
-        background: rgba(102,83,202,0.1); color: #6653ca;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 12px;">💬</span>
-        <span style="font-size: 14px; font-weight: 700; color: #202735;">
-          Agent Conversation
-        </span>
-      </div>
-      <span style="font-size: 11px; color: #7c8390;">
-        Every message is logged in real time
-      </span>
-    </div>
-    """, unsafe_allow_html=True)
-
     # -- Run the resolution pipeline --
     log = ConversationLog()
 
@@ -187,21 +165,9 @@ def _run_and_render(case_data: CaseData, run_mode: str):
         st.error(f"Resolution failed: {exc}")
         return
 
-    # -- Render messages progressively (step by step) --
+    # -- Agent conversation container --
     messages = log.messages
-    log_area = st.container()
-
-    for i, msg in enumerate(messages):
-        with log_area:
-            render_single_message(msg, i)
-
-        # Visual pacing -- longer pauses for arguments/rulings
-        if msg.msg_type in ("argument", "rebuttal", "ruling"):
-            time.sleep(0.4)
-        elif msg.msg_type in ("tool_call", "tool_result"):
-            time.sleep(0.15)
-        else:
-            time.sleep(0.12)
+    render_message_log(messages)
 
     # -- Final ruling --
     st.markdown("""
@@ -347,32 +313,8 @@ def _render_stored():
         except Exception as exc:
             st.warning(f"Evidence panel unavailable: {exc}")
 
-    st.markdown("---")
-
-    # Conversation log (all at once)
-    st.markdown("""
-    <div style="display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 20px; border: 1px solid #e8ebef; border-radius: 12px 12px 0 0;
-    background: white; border-bottom: 1px solid #f0f1f3;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="width: 28px; height: 28px; border-radius: 8px;
-        background: rgba(102,83,202,0.1); color: #6653ca;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 12px;">💬</span>
-        <span style="font-size: 14px; font-weight: 700; color: #202735;">
-          Agent Conversation
-        </span>
-      </div>
-      <span style="font-size: 11px; color: #7c8390;">
-        Every message is logged in real time
-      </span>
-    </div>
-    <div style="border: 1px solid #e8ebef; border-top: none;
-    border-radius: 0 0 12px 12px; background: white; padding: 4px 0;">
-    """, unsafe_allow_html=True)
-    for i, msg in enumerate(messages):
-        render_single_message(msg, i)
-    st.markdown("</div>", unsafe_allow_html=True)
+    # Agent conversation container
+    render_message_log(messages)
 
     # Ruling
     st.markdown("""
