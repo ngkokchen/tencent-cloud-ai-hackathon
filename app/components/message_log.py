@@ -1,12 +1,13 @@
 """Message log component: renders the conversation log in a styled container."""
 
 import html as _html
+import textwrap
 
 import streamlit as st
 
 from models.message import AgentMessage
 
-# Color scheme per agent (dark theme compatible)
+# Color scheme per agent
 AGENT_COLORS = {
     "rider_advocate": {
         "primary": "#378ADD",
@@ -35,9 +36,13 @@ AGENT_COLORS = {
 }
 
 
+def _h(s: str) -> str:
+    """Strip leading indentation from HTML strings."""
+    return textwrap.dedent(s).strip()
+
+
 def _should_show(msg: AgentMessage) -> bool:
     """Return True if the message should be shown in the simplified view."""
-    # Skip raw tool calls and tool results (JSON blobs)
     if msg.msg_type in ("tool_call", "tool_result"):
         return False
     return True
@@ -53,141 +58,158 @@ def _message_html(msg: AgentMessage, idx: int) -> str:
     if len(content) > 3000:
         content = content[:3000] + "\n... [truncated]"
 
-    # Escape HTML in content to prevent breaking the layout
     content = _html.escape(content)
-    # Preserve line breaks
     content = content.replace("\n", "<br>")
-
     timestamp_str = msg.timestamp.strftime("%H:%M:%S")
 
     if msg.msg_type in ("argument", "rebuttal"):
         label = "ARGUMENT" if msg.msg_type == "argument" else "REBUTTAL"
-        return f"""<div style="border-left: 3px solid {colors['primary']};
+        return _h(f"""
+            <div style="border-left: 3px solid {colors['primary']};
             background: {colors['bg']}; padding: 12px 16px; margin: 8px 0;
             border-radius: 0 8px 8px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
-            <div style="display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 11px; color: {colors['primary']};
-              font-weight: 600;">
-                {colors['icon']} {colors['label']}
-                <span style="font-size: 9px; color: #202735;
-                margin-left: 6px; letter-spacing: 0.05em;">
-                  {label}
+              <div style="display: flex; justify-content: space-between;
+              align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 11px; color: {colors['primary']};
+                font-weight: 600;">
+                  {colors['icon']} {colors['label']}
+                  <span style="font-size: 9px; color: #202735;
+                  margin-left: 6px; letter-spacing: 0.05em;">
+                    {label}
+                  </span>
                 </span>
-              </span>
-              <span style="font-size: 10px; color: #7c8390;
-              font-family: monospace;">{timestamp_str}</span>
+                <span style="font-size: 10px; color: #7c8390;
+                font-family: monospace;">{timestamp_str}</span>
+              </div>
+              <div style="font-size: 13px; line-height: 1.6; color: #202735;">
+                {content}
+              </div>
             </div>
-            <div style="font-size: 13px; line-height: 1.6; color: #202735;">
-              {content}
-            </div>
-            </div>"""
+        """)
 
     elif msg.msg_type == "ruling":
-        return f"""<div style="padding: 10px 16px; margin: 4px 0;
+        return _h(f"""
+            <div style="padding: 10px 16px; margin: 4px 0;
             border-bottom: 1px solid #f0f1f3;">
-            <div style="display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 4px;">
-              <span style="font-size: 11px; color: {colors['primary']};
-              font-weight: 600;">
-                {colors['icon']} {colors['label']}
-                <span style="font-size: 9px; color: {colors['primary']};
-                margin-left: 6px; background: {colors['bg']};
-                padding: 1px 6px; border-radius: 3px;">
-                  RULING
+              <div style="display: flex; justify-content: space-between;
+              align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 11px; color: {colors['primary']};
+                font-weight: 600;">
+                  {colors['icon']} {colors['label']}
+                  <span style="font-size: 9px; color: {colors['primary']};
+                  margin-left: 6px; background: {colors['bg']};
+                  padding: 1px 6px; border-radius: 3px;">
+                    RULING
+                  </span>
                 </span>
-              </span>
-              <span style="font-size: 10px; color: #7c8390;
-              font-family: monospace;">{timestamp_str}</span>
+                <span style="font-size: 10px; color: #7c8390;
+                font-family: monospace;">{timestamp_str}</span>
+              </div>
+              <div style="font-size: 12px; color: #202735; margin-top: 4px;
+              line-height: 1.5;">
+                {content}
+              </div>
             </div>
-            <div style="font-size: 12px; color: #202735; margin-top: 4px;
-            line-height: 1.5;">
-              {content}
-            </div>
-            </div>"""
+        """)
 
     elif msg.msg_type == "reasoning":
-        return f"""<div style="padding: 8px 16px; margin: 2px 0;
+        return _h(f"""
+            <div style="padding: 8px 16px; margin: 2px 0;
             border-bottom: 1px solid #f0f1f3;">
-            <div style="display: flex; justify-content: space-between;
-            align-items: center;">
-              <span style="font-size: 11px; color: {colors['primary']};
-              font-weight: 500;">
-                {colors['icon']} {colors['label']}
-              </span>
-              <span style="font-size: 10px; color: #7c8390;
-              font-family: monospace;">{timestamp_str}</span>
+              <div style="display: flex; justify-content: space-between;
+              align-items: center;">
+                <span style="font-size: 11px; color: {colors['primary']};
+                font-weight: 500;">
+                  {colors['icon']} {colors['label']}
+                </span>
+                <span style="font-size: 10px; color: #7c8390;
+                font-family: monospace;">{timestamp_str}</span>
+              </div>
+              <div style="font-size: 12px; color: #9a9da3; font-style: italic;
+              margin-top: 4px; line-height: 1.5;">
+                {content}
+              </div>
             </div>
-            <div style="font-size: 12px; color: #9a9da3; font-style: italic;
-            margin-top: 4px; line-height: 1.5;">
-              {content}
-            </div>
-            </div>"""
+        """)
 
     else:
-        # System and other messages
-        return f"""<div style="padding: 8px 16px; margin: 2px 0;
+        return _h(f"""
+            <div style="padding: 8px 16px; margin: 2px 0;
             border-bottom: 1px solid #f0f1f3;">
-            <div style="display: flex; justify-content: space-between;
-            align-items: center;">
-              <span style="font-size: 11px; color: {colors['primary']};
-              font-weight: 500;">
-                {colors['icon']} {colors['label']}
-              </span>
-              <span style="font-size: 10px; color: #7c8390;
-              font-family: monospace;">{timestamp_str}</span>
+              <div style="display: flex; justify-content: space-between;
+              align-items: center;">
+                <span style="font-size: 11px; color: {colors['primary']};
+                font-weight: 500;">
+                  {colors['icon']} {colors['label']}
+                </span>
+                <span style="font-size: 10px; color: #7c8390;
+                font-family: monospace;">{timestamp_str}</span>
+              </div>
+              <div style="font-size: 12px; color: #202735; margin-top: 4px;
+              line-height: 1.5;">
+                {content}
+              </div>
             </div>
-            <div style="font-size: 12px; color: #202735; margin-top: 4px;
-            line-height: 1.5;">
-              {content}
-            </div>
-            </div>"""
+        """)
 
 
 def render_conversation_container(messages: list, start_idx: int = 0) -> None:
     """
-    Render the conversation inside a styled container card.
-    Filters out tool_call and tool_result messages.
+    Render the conversation inside a styled container card matching Advocate cases design.
     All HTML is built as a single string so Streamlit wraps it in one element.
     """
     parts = []
 
-    # ─── Container header ──────────────────────────────
-    parts.append("""
-        <div style="border: 1px solid #e8ebef; border-radius: 12px;
+    # ─── Container with purple-tinted border ───────────
+    parts.append(_h("""
+        <div style="border: 1px solid rgba(83,74,183,0.18); border-radius: 12px;
         background: white; margin-bottom: 20px; overflow: hidden;">
-          <div style="padding: 14px 20px; border-bottom: 1px solid #e8ebef;
-          display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: 700; color: #202735;
-            font-family: 'Manrope', sans-serif;">
-              <span style="margin-right: 8px;">&#128172;</span>Agent conversation
+    """))
+
+    # ─── Header bar ────────────────────────────────────
+    parts.append(_h("""
+        <div style="background: #f8f7fc; padding: 16px 20px;
+        border-bottom: 1px solid rgba(83,74,183,0.12);">
+          <div style="display: flex; justify-content: space-between;
+          align-items: center;">
+            <span style="font-size: 10px; font-weight: 700;
+            color: #534AB7; letter-spacing: 0.12em;">
+              <span style="margin-right: 4px;">&#128172;</span>AGENT CONVERSATION
             </span>
-            <span style="font-size: 10px; color: #7c8390;">
-              Every message is logged in real time
-            </span>
-          </div>
-          <div style="padding: 10px 20px; background: #f5f6f8;
-          border-bottom: 1px solid #e8ebef; display: flex; gap: 16px;">
-            <span style="font-size: 10px; color: #378ADD;">
-              <span style="display: inline-block; width: 6px; height: 6px;
-              background: #378ADD; border-radius: 50%; margin-right: 4px;"></span>
-              Rider Advocate
-            </span>
-            <span style="font-size: 10px; color: #D85A30;">
-              <span style="display: inline-block; width: 6px; height: 6px;
-              background: #D85A30; border-radius: 50%; margin-right: 4px;"></span>
-              Driver Advocate
-            </span>
-            <span style="font-size: 10px; color: #534AB7;">
-              <span style="display: inline-block; width: 6px; height: 6px;
-              background: #534AB7; border-radius: 50%; margin-right: 4px;"></span>
-              Judge
+            <span style="font-size: 9px; color: #534AB7;
+            border: 1px solid rgba(83,74,183,0.18);
+            border-radius: 4px; padding: 2px 8px;">
+              Real-time
             </span>
           </div>
-          <div style="padding: 8px 0;">
-    """)
+        </div>
+    """))
+
+    # ─── Agent legend bar ──────────────────────────────
+    parts.append(_h("""
+        <div style="padding: 10px 20px; background: #f5f6f8;
+        border-bottom: 1px solid #e8ebef; display: flex; gap: 16px;">
+          <span style="font-size: 10px; color: #378ADD;">
+            <span style="display: inline-block; width: 6px; height: 6px;
+            background: #378ADD; border-radius: 50%; margin-right: 4px;"></span>
+            Rider Advocate
+          </span>
+          <span style="font-size: 10px; color: #D85A30;">
+            <span style="display: inline-block; width: 6px; height: 6px;
+            background: #D85A30; border-radius: 50%; margin-right: 4px;"></span>
+            Driver Advocate
+          </span>
+          <span style="font-size: 10px; color: #534AB7;">
+            <span style="display: inline-block; width: 6px; height: 6px;
+            background: #534AB7; border-radius: 50%; margin-right: 4px;"></span>
+            Judge
+          </span>
+        </div>
+    """))
 
     # ─── Messages ──────────────────────────────────────
+    parts.append("<div style=\"padding: 8px 0;\">")
+
     visible_count = 0
     for i, msg in enumerate(messages[start_idx:], start=start_idx):
         if isinstance(msg, dict):
@@ -197,21 +219,22 @@ def render_conversation_container(messages: list, start_idx: int = 0) -> None:
             parts.append(html)
             visible_count += 1
 
+    parts.append("</div>")
+
     # ─── Container footer ──────────────────────────────
-    parts.append("""
-          </div>
-          <div style="padding: 10px 20px; border-top: 1px solid #e8ebef;
-          display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 10px; color: #7c8390;">
-              <span style="color: #1D9E75; margin-right: 4px;">&#10003;</span>
-              Resolution complete
-            </span>
-            <span style="font-size: 10px; color: #7c8390;">
-              3 agents &middot; Demo
-            </span>
-          </div>
+    parts.append(_h("""
+        <div style="padding: 10px 20px; border-top: 1px solid #e8ebef;
+        display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 10px; color: #7c8390;">
+            <span style="color: #1D9E75; margin-right: 4px;">&#10003;</span>
+            Resolution complete
+          </span>
+          <span style="font-size: 10px; color: #7c8390;">
+            3 agents &middot; Demo
+          </span>
         </div>
-    """)
+        </div>
+    """))
 
     # Render everything in one st.markdown call
     st.markdown("".join(parts), unsafe_allow_html=True)
