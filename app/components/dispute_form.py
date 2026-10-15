@@ -62,6 +62,65 @@ _SIDEBAR_CSS = """
     color: #202735;
     font-weight: 600;
 }
+
+/* Full-width toggle across the sidebar */
+[data-testid="stSidebar"] div[data-testid="stRadio"] {
+    width: 100% !important;
+}
+[data-testid="stSidebar"] div[data-testid="stRadio"] > div {
+    width: 100% !important;
+}
+
+/* Field styling to match the app design (rounded, soft canvas bg) */
+[data-testid="stSidebar"] .stSelectbox > div > div,
+[data-testid="stSidebar"] .stTextInput > div > div,
+[data-testid="stSidebar"] .stTextArea textarea {
+    border-radius: 8px !important;
+    border: 1px solid #e8ebef !important;
+    background: #f5f6f8 !important;
+    font-size: 12px !important;
+    color: #202735 !important;
+    transition: border-color 0.15s;
+}
+[data-testid="stSidebar"] .stSelectbox > div > div:focus-within,
+[data-testid="stSidebar"] .stTextInput > div > div:focus-within,
+[data-testid="stSidebar"] .stTextArea textarea:focus {
+    border-color: #6653ca !important;
+    box-shadow: 0 0 0 1px rgba(102,83,202,0.15) !important;
+}
+
+/* Sidebar labels — smaller, muted, matching the draft */
+[data-testid="stSidebar"] .stSelectbox label p,
+[data-testid="stSidebar"] .stTextInput label p,
+[data-testid="stSidebar"] .stTextArea label p {
+    font-size: 11px !important;
+    color: #7c8390 !important;
+    margin-bottom: 4px !important;
+}
+
+/* Checkbox — subtle accent */
+[data-testid="stSidebar"] .stCheckbox label p {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #202735 !important;
+}
+
+/* Resolve Dispute button — match app primary styling */
+[data-testid="stSidebar"] .stButton > button[kind="primary"] {
+    background: #6653ca !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 10px 0 !important;
+    border: none !important;
+    box-shadow: 0 4px 10px rgba(102,83,202,0.15) !important;
+    transition: all 0.18s;
+}
+[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
+    background: #5a48b8 !important;
+    box-shadow: 0 6px 14px rgba(102,83,202,0.22) !important;
+    filter: none !important;
+}
 </style>
 """
 
