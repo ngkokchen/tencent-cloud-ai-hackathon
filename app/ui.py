@@ -471,7 +471,68 @@ def _render_argument_summary(arg: Argument):
         st.markdown(tags_html, unsafe_allow_html=True)
 
     with st.expander("Full argument details"):
-        st.json(arg.model_dump())
+        # Reasoning
+        if arg.reasoning:
+            st.markdown(
+                f"""
+                <p style="font-size: 12px; color: #202735; line-height: 1.6;
+                margin: 0 0 10px 0;">
+                  {arg.reasoning}
+                </p>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        # Evidence items
+        if arg.evidence:
+            st.markdown(
+                """
+                <p style="font-size: 10px; font-weight: 700; color: #7c8390;
+                letter-spacing: 0.1em; text-transform: uppercase; margin: 10px 0 6px 0;">
+                  Evidence
+                </p>
+                """,
+                unsafe_allow_html=True,
+            )
+            for ev in arg.evidence:
+                st.markdown(
+                    f"""
+                    <div style="display: flex; gap: 8px; margin: 4px 0;
+                    font-size: 11px; line-height: 1.5;">
+                      <span style="color: #7c8390; white-space: nowrap;">
+                        {ev.source}
+                      </span>
+                      <span style="color: #202735;">{ev.fact}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+        # Policy citations
+        if arg.policy_cited:
+            st.markdown(
+                """
+                <p style="font-size: 10px; font-weight: 700; color: #7c8390;
+                letter-spacing: 0.1em; text-transform: uppercase; margin: 10px 0 6px 0;">
+                  Policy cited
+                </p>
+                """,
+                unsafe_allow_html=True,
+            )
+            for pol in arg.policy_cited:
+                st.markdown(
+                    f"""
+                    <div style="font-size: 11px; line-height: 1.5; margin: 4px 0;">
+                      <span style="color: #202735; font-weight: 600;">
+                        &sect; {pol.clause} &middot; {pol.title}
+                      </span>
+                      <p style="color: #7c8390; margin: 2px 0 0 0;">
+                        {pol.relevance}
+                      </p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
 
 # --- Landing page ----------------------------------------------------
