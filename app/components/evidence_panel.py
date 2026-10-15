@@ -108,7 +108,7 @@ def render_evidence_panel(case: CaseData) -> None:
             </div>
         """))
 
-    # ── Column 2: Trip metrics + Fare breakdown ────────────────────────
+    # ── Column 2: Route comparison cards + Fare breakdown ──────────────
     parts.append(_h("""
         <div>
           <p style="font-size: 10px; font-weight: 700; color: #7c8390;
@@ -117,38 +117,67 @@ def render_evidence_panel(case: CaseData) -> None:
           </p>
     """))
 
+    # Route comparison cards — styled like Advocate cases
     parts.append(_h(f"""
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr);
+          <div style="display: grid; grid-template-columns: 1fr 1fr;
           gap: 10px; padding-bottom: 14px; border-bottom: 1px solid #e8ebef;">
+            <!-- Optimal Route card -->
             <div>
+              <div style="height: 3px; background: #1D9E75; border-radius: 2px;
+              margin-bottom: 10px;"></div>
+              <p style="font-size: 11px; font-weight: 700; color: #1D9E75;
+              margin: 0 0 10px 0;">OPTIMAL ROUTE</p>
               <p style="font-size: 10px; color: #7c8390; margin: 0;">Est. distance</p>
               <p style="font-size: 20px; font-weight: 800; color: #202735;
               margin: 4px 0 0 0; font-family: 'Manrope', sans-serif;">
                 {est_dist} <span style="font-size: 10px; font-weight: 400; color: #7c8390;">km</span>
               </p>
-              <p style="font-size: 10px; color: #7c8390; margin: 8px 0 0 0;">Opt. route traffic</p>
+              <p style="font-size: 10px; color: #7c8390; margin: 8px 0 0 0;">Traffic</p>
               {_traffic_tag(opt_traffic)}
             </div>
+            <!-- Actual Route card -->
             <div>
+              <div style="height: 3px; background: #D85A30; border-radius: 2px;
+              margin-bottom: 10px;"></div>
+              <p style="font-size: 11px; font-weight: 700; color: #D85A30;
+              margin: 0 0 10px 0;">ACTUAL ROUTE</p>
               <p style="font-size: 10px; color: #7c8390; margin: 0;">Actual distance</p>
               <p style="font-size: 20px; font-weight: 800; color: #202735;
               margin: 4px 0 0 0; font-family: 'Manrope', sans-serif;">
                 {act_dist} <span style="font-size: 10px; font-weight: 400; color: #7c8390;">km</span>
               </p>
-              <p style="font-size: 10px; color: #7c8390; margin: 8px 0 0 0;">Act. route traffic</p>
+              <p style="font-size: 10px; color: #7c8390; margin: 8px 0 0 0;">Traffic</p>
               {_traffic_tag(act_traffic)}
             </div>
-            <div>
-              <p style="font-size: 10px; color: #7c8390; margin: 0;">Deviation</p>
-              <p style="font-size: 20px; font-weight: 800; color: #D85A30;
-              margin: 4px 0 0 0; font-family: 'Manrope', sans-serif;">
-                {deviation}<span style="font-size: 12px; font-weight: 600;">%</span>
-              </p>
-              <p style="font-size: 10px; color: #7c8390; margin: 8px 0 0 0;">Extra time</p>
-              <p style="font-size: 20px; font-weight: 800; color: #202735;
-              margin: 4px 0 0 0; font-family: 'Manrope', sans-serif;">
-                {extra_time} <span style="font-size: 10px; font-weight: 400; color: #7c8390;">min</span>
-              </p>
+          </div>
+    """))
+
+    # Deviation card — full width below the route comparison
+    parts.append(_h(f"""
+          <div style="margin-top: 10px;">
+            <div style="display: flex; gap: 12px;">
+              <div style="flex: 1;">
+                <div style="height: 3px; background: #E24B4A; border-radius: 2px;
+                margin-bottom: 10px;"></div>
+                <p style="font-size: 11px; font-weight: 700; color: #E24B4A;
+                margin: 0 0 10px 0;">DEVIATION</p>
+                <p style="font-size: 10px; color: #7c8390; margin: 0;">Extra distance</p>
+                <p style="font-size: 20px; font-weight: 800; color: #E24B4A;
+                margin: 4px 0 0 0; font-family: 'Manrope', sans-serif;">
+                  {deviation}<span style="font-size: 12px; font-weight: 600;">%</span>
+                </p>
+              </div>
+              <div style="flex: 1;">
+                <div style="height: 3px; background: #534AB7; border-radius: 2px;
+                margin-bottom: 10px;"></div>
+                <p style="font-size: 11px; font-weight: 700; color: #534AB7;
+                margin: 0 0 10px 0;">TIME IMPACT</p>
+                <p style="font-size: 10px; color: #7c8390; margin: 0;">Extra time</p>
+                <p style="font-size: 20px; font-weight: 800; color: #202735;
+                margin: 4px 0 0 0; font-family: 'Manrope', sans-serif;">
+                  {extra_time} <span style="font-size: 10px; font-weight: 400; color: #7c8390;">min</span>
+                </p>
+              </div>
             </div>
           </div>
     """))
@@ -170,26 +199,31 @@ def render_evidence_panel(case: CaseData) -> None:
             </div>
         """))
 
-    # Fare breakdown
+    # Fare breakdown card — styled like Advocate cases
     if "error" not in fare:
         total = fare.get("total", 0)
         parts.append(_h(f"""
-            <div style="background: #f5f6f8; border-radius: 8px; padding: 12px 16px; margin-top: 12px;">
-              <div style="display: flex; justify-content: space-between;
-              align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 12px; font-weight: 600; color: #202735;">Fare breakdown</span>
-                <span style="font-size: 12px; font-weight: 700; color: #202735;">${total:.2f}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between;
-              align-items: center; padding: 5px 0;">
-                <span style="font-size: 11px; font-weight: 500; color: #202735;">Base fare</span>
-                <span style="font-size: 11px; font-weight: 600; color: #202735;">${fare.get('base', 0):.2f}</span>
-              </div>
-              <div style="display: flex; justify-content: space-between;
-              align-items: center; padding: 5px 0;">
-                <span style="font-size: 11px; font-weight: 500; color: #202735;">Distance &middot; Time</span>
-                <span style="font-size: 11px; font-weight: 600; color: #202735;">${fare.get('distance_charge', 0):.2f} &middot; ${fare.get('time_charge', 0):.2f}</span>
-              </div>
+            <div style="margin-top: 14px;">
+              <div style="height: 3px; background: #202735; border-radius: 2px;
+              margin-bottom: 10px;"></div>
+              <p style="font-size: 11px; font-weight: 700; color: #202735;
+              margin: 0 0 10px 0;">FARE BREAKDOWN</p>
+              <div style="background: #f5f6f8; border-radius: 8px; padding: 12px 16px;">
+                <div style="display: flex; justify-content: space-between;
+                align-items: center; margin-bottom: 10px;">
+                  <span style="font-size: 12px; font-weight: 600; color: #202735;">Total charged</span>
+                  <span style="font-size: 12px; font-weight: 700; color: #202735;">${total:.2f}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;
+                align-items: center; padding: 5px 0;">
+                  <span style="font-size: 11px; font-weight: 500; color: #202735;">Base fare</span>
+                  <span style="font-size: 11px; font-weight: 600; color: #202735;">${fare.get('base', 0):.2f}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;
+                align-items: center; padding: 5px 0;">
+                  <span style="font-size: 11px; font-weight: 500; color: #202735;">Distance &middot; Time</span>
+                  <span style="font-size: 11px; font-weight: 600; color: #202735;">${fare.get('distance_charge', 0):.2f} &middot; ${fare.get('time_charge', 0):.2f}</span>
+                </div>
         """))
         if fare.get("overcharge_amount", 0) > 0:
             parts.append(_h(f"""
@@ -207,7 +241,7 @@ def render_evidence_panel(case: CaseData) -> None:
                   <span style="font-size: 11px; font-weight: 600; color: #D85A30;">${fare['cancellation_fee']:.2f}</span>
                 </div>
             """))
-        parts.append("</div>")
+        parts.append("</div></div>")
 
     parts.append("</div>")  # close column 2
 
