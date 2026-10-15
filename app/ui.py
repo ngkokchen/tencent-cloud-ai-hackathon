@@ -136,7 +136,7 @@ def _run_and_render(case_data: CaseData, run_mode: str):
     )
 
     # -- Evidence panel (collapsible) --
-    with st.expander("Evidence Summary", expanded=False):
+    with st.expander("Evidence room", expanded=False):
         try:
             render_evidence_panel(case_data)
         except Exception as exc:
@@ -341,7 +341,7 @@ def _render_stored():
     )
 
     # Evidence panel
-    with st.expander("Evidence Summary", expanded=False):
+    with st.expander("Evidence room", expanded=False):
         try:
             render_evidence_panel(case)
         except Exception as exc:
