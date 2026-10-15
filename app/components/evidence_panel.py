@@ -39,25 +39,6 @@ def render_evidence_panel(case: CaseData) -> None:
     """Render a summary of the evidence for the dispute in a card container."""
     trip_id = case.trip.get("ride_id", case.dispute.get("ride_id", ""))
 
-    # ─── Evidence Room container ─────────────────────────
-    st.markdown(
-        """
-        <div style="border: 1px solid #e8ebef; border-radius: 12px;
-        background: white; margin-bottom: 20px; overflow: hidden;">
-          <div style="padding: 14px 20px; border-bottom: 1px solid #e8ebef;
-          display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: 700; color: #202735;
-            font-family: 'Manrope', sans-serif;">
-              <span style="margin-right: 8px;">&#128451;</span>Evidence room
-            </span>
-            <span style="font-size: 10px; color: #7c8390;">
-              Trip #{}</span>
-          </div>
-          <div style="padding: 16px 20px;">
-        """.format(trip_id),
-        unsafe_allow_html=True,
-    )
-
     # ─── Three-column grid: Map | Metrics | Chat ─────────
     col_map, col_metrics, col_chat = st.columns([1.05, 1, 0.86])
 
@@ -165,7 +146,7 @@ def render_evidence_panel(case: CaseData) -> None:
                 <div style="background: #f5f6f8; border-radius: 8px; padding: 12px 16px;
                 margin-top: 12px;">
                   <div style="display: flex; justify-content: space-between;
-                  align-items: center; margin-bottom: 8px;">
+                  align-items: center; margin-bottom: 10px;">
                     <span style="font-size: 12px; font-weight: 600; color: #202735;">
                       Fare breakdown
                     </span>
@@ -173,41 +154,47 @@ def render_evidence_panel(case: CaseData) -> None:
                       ${:.2f}
                     </span>
                   </div>
-                  <div style="display: grid; grid-template-columns: 1fr auto;
-                  gap: 6px 16px; font-size: 11px; color: #7c8390;">
                 """.format(fare.get("total", 0)),
                 unsafe_allow_html=True,
             )
             st.markdown(
                 f"""
-                <span>Base fare</span>
-                <span style="text-align: right;">${fare.get('base', 0):.2f}</span>
-                <span>Distance &middot; Time</span>
-                <span style="text-align: right;">${fare.get('distance_charge', 0):.2f} &middot; ${fare.get('time_charge', 0):.2f}</span>
+                <div style="display: flex; justify-content: space-between;
+                align-items: center; padding: 5px 0;">
+                  <span style="font-size: 11px; font-weight: 500; color: #202735;">Base fare</span>
+                  <span style="font-size: 11px; font-weight: 600; color: #202735;">${fare.get('base', 0):.2f}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;
+                align-items: center; padding: 5px 0;">
+                  <span style="font-size: 11px; font-weight: 500; color: #202735;">Distance &middot; Time</span>
+                  <span style="font-size: 11px; font-weight: 600; color: #202735;">${fare.get('distance_charge', 0):.2f} &middot; ${fare.get('time_charge', 0):.2f}</span>
+                </div>
                 """,
                 unsafe_allow_html=True,
             )
             if fare.get("overcharge_amount", 0) > 0:
                 st.markdown(
                     f"""
-                    <span style="color: #D85A30; font-weight: 500;">Disputed overcharge</span>
-                    <span style="text-align: right; color: #D85A30; font-weight: 600;">
-                      ${fare['overcharge_amount']:.2f}
-                    </span>
+                    <div style="display: flex; justify-content: space-between;
+                    align-items: center; padding: 5px 0;">
+                      <span style="font-size: 11px; font-weight: 500; color: #D85A30;">Disputed overcharge</span>
+                      <span style="font-size: 11px; font-weight: 600; color: #D85A30;">${fare['overcharge_amount']:.2f}</span>
+                    </div>
                     """,
                     unsafe_allow_html=True,
                 )
             elif fare.get("cancellation_fee", 0) > 0:
                 st.markdown(
                     f"""
-                    <span style="color: #D85A30; font-weight: 500;">Cancellation fee</span>
-                    <span style="text-align: right; color: #D85A30; font-weight: 600;">
-                      ${fare['cancellation_fee']:.2f}
-                    </span>
+                    <div style="display: flex; justify-content: space-between;
+                    align-items: center; padding: 5px 0;">
+                      <span style="font-size: 11px; font-weight: 500; color: #D85A30;">Cancellation fee</span>
+                      <span style="font-size: 11px; font-weight: 600; color: #D85A30;">${fare['cancellation_fee']:.2f}</span>
+                    </div>
                     """,
                     unsafe_allow_html=True,
                 )
-            st.markdown("</div></div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Column 3: Chat highlights + Profiles ────────────
     with col_chat:
@@ -307,5 +294,3 @@ def render_evidence_panel(case: CaseData) -> None:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Close the Evidence Room container
-    st.markdown("</div></div>", unsafe_allow_html=True)
