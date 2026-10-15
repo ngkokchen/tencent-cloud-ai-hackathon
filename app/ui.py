@@ -135,12 +135,11 @@ def _run_and_render(case_data: CaseData, run_mode: str):
         unsafe_allow_html=True,
     )
 
-    # -- Evidence panel (collapsible) --
-    with st.expander("Evidence room", expanded=False):
-        try:
-            render_evidence_panel(case_data)
-        except Exception as exc:
-            st.warning(f"Evidence panel unavailable: {exc}")
+    # -- Evidence room --
+    try:
+        render_evidence_panel(case_data)
+    except Exception as exc:
+        st.warning(f"Evidence panel unavailable: {exc}")
 
     # -- Run the resolution pipeline --
     log = ConversationLog()
@@ -250,12 +249,11 @@ def _render_stored():
         unsafe_allow_html=True,
     )
 
-    # Evidence panel
-    with st.expander("Evidence room", expanded=False):
-        try:
-            render_evidence_panel(case)
-        except Exception as exc:
-            st.warning(f"Evidence panel unavailable: {exc}")
+    # Evidence room
+    try:
+        render_evidence_panel(case)
+    except Exception as exc:
+        st.warning(f"Evidence panel unavailable: {exc}")
 
     # Agent conversation container
     render_message_log(messages)
