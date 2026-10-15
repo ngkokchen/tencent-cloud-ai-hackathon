@@ -61,28 +61,22 @@ def render_evidence_panel(case: CaseData) -> None:
     # ─── Build the card as one HTML string ─────────────────────────────
     parts: list[str] = []
 
-    # Card border + header (matches HTML summary style)
-    parts.append(_h(f"""
-        <div style="border: 1px solid #e8ebef; border-radius: 12px;
+    # Card border + header (matches Agent conversation header pattern)
+    parts.append(_h("""
+        <div style="border: 1px solid rgba(29,158,117,0.18); border-radius: 12px;
         background: white; overflow: hidden; margin-bottom: 20px;">
-          <div style="padding: 16px 20px; border-bottom: 1px solid #e8ebef;">
+          <div style="background: #eaf6f0; padding: 16px 20px;
+          border-bottom: 1px solid rgba(29,158,117,0.12);">
             <div style="display: flex; justify-content: space-between;
             align-items: center;">
-              <span style="display: flex; gap: 10px; align-items: center;
-              font-size: 14px; font-weight: 700; color: #202735;
-              font-family: 'Manrope', sans-serif;">
-                <span style="font-size: 12px; color: #7c8390;">&#9632;</span>
-                Evidence room
-                <span style="display: inline-block; background: #f5f6f8;
-                color: #7c8390; font-size: 10px; font-weight: 600;
-                padding: 2px 8px; border-radius: 4px; margin-left: 4px;">
-                  6 sources
-                </span>
+              <span style="font-size: 10px; font-weight: 700;
+              color: #1D9E75; letter-spacing: 0.12em;">
+                <span style="margin-right: 4px;">&#128269;</span>EVIDENCE ROOM
               </span>
-              <span style="font-size: 10px; color: #7c8390;
-              display: flex; align-items: center; gap: 12px;">
-                Trip #{trip_id}
-                <span style="font-size: 9px;">&#9660;</span>
+              <span style="font-size: 9px; color: #1D9E75;
+              border: 1px solid rgba(29,158,117,0.18);
+              border-radius: 4px; padding: 2px 8px;">
+                Trip verified
               </span>
             </div>
           </div>
