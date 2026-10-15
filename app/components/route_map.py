@@ -14,11 +14,8 @@ PICKUP_COLOR = "#378ADD"     # blue — pickup marker
 DROPOFF_COLOR = "#534AB7"    # purple — dropoff marker
 
 
-def render_route_map(case: CaseData) -> None:
-    """
-    Render an interactive folium map showing the actual vs optimal route.
-    Falls back gracefully if GPS data is missing.
-    """
+def _build_map(case: CaseData):
+    """Build a folium Map object (or None if no GPS data)."""
     trip = case.trip
     optimal_route = trip.get("optimal_route", [])
     actual_route = trip.get("actual_route", [])
@@ -26,8 +23,7 @@ def render_route_map(case: CaseData) -> None:
     dropoff = trip.get("dropoff", {})
 
     if not optimal_route and not actual_route:
-        st.info("No GPS route data available for this case.")
-        return
+        return None
 
     # Determine map center (midpoint of all points)
     all_points = (
@@ -35,7 +31,7 @@ def render_route_map(case: CaseData) -> None:
         + [(p["lat"], p["lng"]) for p in actual_route]
     )
     if not all_points:
-        return
+        return None
 
     center_lat = sum(p[0] for p in all_points) / len(all_points)
     center_lng = sum(p[1] for p in all_points) / len(all_points)
@@ -130,5 +126,21 @@ def render_route_map(case: CaseData) -> None:
     """
     m.get_root().html.add_child(folium.Element(legend_html))
 
-    # Render in Streamlit
+    return m
+
+
+def get_route_map_html(case: CaseData) -> str:
+    """Return the Folium map HTML as a raw string (suitable for iframe embedding)."""
+    m = _build_map(case)
+    if m is None:
+        return ""
+    return m.get_root().render()
+
+
+def render_route_map(case: CaseData) -> None:
+    """Render an interactive folium map directly in Streamlit."""
+    m = _build_map(case)
+    if m is None:
+        st.info("No GPS route data available for this case.")
+        return
     st_folium(m, height=420, returned_objects=[])
