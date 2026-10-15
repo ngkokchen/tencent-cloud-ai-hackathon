@@ -13,8 +13,58 @@ from evidence.loaders import CaseData
 _SIDEBAR_CSS = """
 <style>
 [data-testid="stSidebar"] { min-width: 280px !important; max-width: 310px !important; }
+
+/* Segmented control style for radio */
+[data-testid="stSidebar"] div[role="radiogroup"] {
+    flex-direction: row !important;
+    gap: 4px !important;
+    background: #f5f6f8;
+    padding: 4px;
+    border-radius: 8px;
+    align-items: stretch;
+}
+[data-testid="stSidebar"] div[role="radiogroup"] > label {
+    flex: 1;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+[data-testid="stSidebar"] div[role="radiogroup"] > label > div {
+    justify-content: center;
+    padding: 8px 0;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.15s;
+}
+[data-testid="stSidebar"] div[role="radiogroup"] > label > div:first-child { display: none; }
+[data-testid="stSidebar"] div[role="radiogroup"] > label [data-testid="stMarkdownContainer"] {
+    display: none;
+}
+/* Active (checked) pill */
+[data-testid="stSidebar"] div[role="radiogroup"] > label [aria-checked="true"] {
+    background: white !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    color: #202735 !important;
+    font-weight: 600;
+}
+/* Inactive pill */
+[data-testid="stSidebar"] div[role="radiogroup"] > label [aria-checked="false"] {
+    background: transparent;
+    color: #7c8390;
+}
 </style>
 """
+
+
+def _parse_route(route_str: str) -> tuple[str, str]:
+    """Parse pickup and dropoff from a route string."""
+    if not route_str:
+        return "N/A", "N/A"
+    for sep in (" -> ", " → ", " to ", " - "):
+        if sep in route_str:
+            parts = route_str.split(sep, 1)
+            return parts[0].strip(), parts[1].strip()
+    return route_str.strip(), "N/A"
 
 
 def render_dispute_form() -> tuple[CaseData | None, str]:
@@ -68,46 +118,22 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
         unsafe_allow_html=True,
     )
 
-    # ─── Method toggle (visual + session state) ──────────
+    # ─── Method toggle (working horizontal radio) ────────
     _method_key = "_df_method"
     if _method_key not in st.session_state:
         st.session_state[_method_key] = "sample"
 
     method = st.session_state[_method_key]
 
-    # Render styled toggle
-    sample_active = "background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.08); color: #202735;" if method == "sample" else "color: #7c8390;"
-    custom_active = "background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.08); color: #202735;" if method == "custom" else "color: #7c8390;"
-
-    st.sidebar.markdown(
-        f"""
-        <div style="display: flex; padding: 4px; background: #f5f6f8; border-radius: 8px; gap: 4px; margin-bottom: 16px;">
-          <button onclick="window.parent.postMessage({{type:'streamlit:setComponentValue', value:'sample'}}, '*')"
-            style="flex: 1; text-align: center; font-size: 11px; font-weight: 500;
-            padding: 8px 0; border-radius: 6px; border: none; cursor: pointer;
-            {sample_active} transition: all 0.15s;">
-            Pick sample case
-          </button>
-          <button onclick="window.parent.postMessage({{type:'streamlit:setComponentValue', value:'custom'}}, '*')"
-            style="flex: 1; text-align: center; font-size: 11px; font-weight: 500;
-            padding: 8px 0; border-radius: 6px; border: none; cursor: pointer;
-            {custom_active} transition: all 0.15s;">
-            File custom dispute
-          </button>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Streamlit-native radio (hidden label, used for actual state)
     mode = st.sidebar.radio(
         "Choose input method",
         ["Pick sample case", "File custom dispute"],
         label_visibility="collapsed",
+        horizontal=True,
         index=0 if method == "sample" else 1,
         key="_df_radio",
     )
-    # Sync back to our visual state
+    # Sync back to our state
     st.session_state[_method_key] = "sample" if mode == "Pick sample case" else "custom"
 
     # ─── Demo mode ───────────────────────────────────────
@@ -115,6 +141,7 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
         "Demo mode",
         value=True,
         help="Uses simulated agent responses. No real charges or account changes.",
+        key="_df_demo",
     )
     demo_note = (
         "Uses simulated agent responses. No real charges or account changes."
@@ -148,11 +175,11 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
             range(len(labels)),
             format_func=lambda i: labels[i],
             label_visibility="visible",
+            key="_df_case_select",
         )
 
         selected = cases[selected_idx]
-        pickup = selected['route'].split(' → ')[0] if ' → ' in selected['route'] else selected['route']
-        dropoff = selected['route'].split(' → ')[1] if ' → ' in selected['route'] else 'N/A'
+        pickup, dropoff = _parse_route(selected.get("route", ""))
 
         st.sidebar.markdown(
             f"""
@@ -178,13 +205,13 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
               </p>
             </div>
             <p style="font-size: 11px; color: #7c8390; line-height: 1.7; margin-top: 14px;">
-              {selected['summary']}
+              {selected.get('summary', '')}
             </p>
             """,
             unsafe_allow_html=True,
         )
 
-        if st.sidebar.button("Resolve Dispute", type="primary", use_container_width=True):
+        if st.sidebar.button("Resolve Dispute", type="primary", use_container_width=True, key="_df_resolve_sample"):
             from pathlib import Path
             from config.settings import SAMPLES_DIR
             case_file = SAMPLES_DIR / selected["file"]
@@ -205,22 +232,24 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
             "Dispute type",
             ["route_deviation", "no_show"],
             format_func=lambda x: "Route deviation" if x == "route_deviation" else "No-show charge",
+            key="_df_dispute_type",
         )
 
-        trip_id = st.sidebar.text_input("Trip ID", value="RIDE-CUSTOM-001")
+        trip_id = st.sidebar.text_input("Trip ID", value="RIDE-CUSTOM-001", key="_df_trip_id")
         complaint = st.sidebar.text_area(
             "Complaint description",
             value="Driver took a longer route than expected.",
             height=80,
+            key="_df_complaint",
         )
 
         col_r, col_d = st.sidebar.columns(2)
         with col_r:
-            rider_id = st.text_input("Rider ID", value="R-CUST-001")
+            rider_id = st.text_input("Rider ID", value="R-CUST-001", key="_df_rider_id")
         with col_d:
-            driver_id = st.text_input("Driver ID", value="D-CUST-001")
+            driver_id = st.text_input("Driver ID", value="D-CUST-001", key="_df_driver_id")
 
-        if st.sidebar.button("Resolve Dispute", type="primary", use_container_width=True):
+        if st.sidebar.button("Resolve Dispute", type="primary", use_container_width=True, key="_df_resolve_custom"):
             case_data = CaseData(
                 dispute={
                     "dispute_id": "CUSTOM-001",
