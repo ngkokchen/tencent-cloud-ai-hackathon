@@ -47,26 +47,6 @@ def render_evidence_panel(case: CaseData) -> None:
         if case.trip.get("optimal_route") or case.trip.get("actual_route"):
             render_route_map(case)
 
-        # Map legend (optimal vs actual)
-        st.markdown(
-            """
-            <div style="display: flex; gap: 16px; margin-top: 10px;
-            font-size: 10px; color: #7c8390;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="width: 14px; height: 3px; background: #6653ca;
-                border-radius: 2px;"></span>
-                <span>Optimal route</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="width: 14px; height: 3px; background: #b0a3d9;
-                border-radius: 2px;"></span>
-                <span>Actual route</span>
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
     # ── Column 2: Trip & route analysis + Fare breakdown ─
     with col_metrics:
         route = get_route_analysis(trip_id)
