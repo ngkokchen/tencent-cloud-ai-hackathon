@@ -27,30 +27,40 @@ _SIDEBAR_CSS = """
     flex: 1;
     margin: 0 !important;
     padding: 0 !important;
+    text-align: center;
+    cursor: pointer;
 }
 [data-testid="stSidebar"] div[role="radiogroup"] > label > div {
     justify-content: center;
-    padding: 8px 0;
+    padding: 0;
     border-radius: 6px;
-    font-size: 11px;
-    font-weight: 500;
     transition: all 0.15s;
 }
-[data-testid="stSidebar"] div[role="radiogroup"] > label > div:first-child { display: none; }
+/* Hide the radio circle icon */
+[data-testid="stSidebar"] div[role="radiogroup"] > label > div:first-child {
+    display: none !important;
+}
+/* Label text styling */
 [data-testid="stSidebar"] div[role="radiogroup"] > label [data-testid="stMarkdownContainer"] {
-    display: none;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 8px 0;
+    border-radius: 6px;
+    display: block;
 }
-/* Active (checked) pill */
-[data-testid="stSidebar"] div[role="radiogroup"] > label [aria-checked="true"] {
-    background: white !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    color: #202735 !important;
-    font-weight: 600;
-}
-/* Inactive pill */
-[data-testid="stSidebar"] div[role="radiogroup"] > label [aria-checked="false"] {
-    background: transparent;
+/* Inactive label */
+[data-testid="stSidebar"] div[role="radiogroup"] > label [data-testid="stMarkdownContainer"] p {
     color: #7c8390;
+}
+/* Active label (checked) */
+[data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) [data-testid="stMarkdownContainer"] {
+    background: white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+[data-testid="stSidebar"] div[role="radiogroup"] > label:has(input:checked) [data-testid="stMarkdownContainer"] p {
+    color: #202735;
+    font-weight: 600;
 }
 </style>
 """
