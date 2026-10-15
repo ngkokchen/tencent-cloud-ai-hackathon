@@ -3,14 +3,21 @@
 Matches the ui-design-draft.html sidebar styling.
 """
 
+import textwrap
+
 import streamlit as st
 
 from evidence.loaders import list_available_cases, load_case_by_file
 from evidence.loaders import CaseData
 
 
+def _h(s: str) -> str:
+    """Strip leading indentation from HTML strings."""
+    return textwrap.dedent(s).strip()
+
+
 # Sidebar width override so the timeline has room
-_SIDEBAR_CSS = """
+_SIDEBAR_CSS = _h("""
 <style>
 [data-testid="stSidebar"] { min-width: 280px !important; max-width: 310px !important; }
 
@@ -122,16 +129,16 @@ _SIDEBAR_CSS = """
     filter: none !important;
 }
 </style>
-"""
+""")
 
 # Inline SVG route icon for the logo
-_ROUTE_ICON_SVG = """
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="6" cy="19" r="3"/>
-  <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/>
-  <circle cx="18" cy="5" r="3"/>
-</svg>
-"""
+_ROUTE_ICON_SVG = (
+    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" '
+    'stroke="currentColor" stroke-width="2.2" stroke-linecap="round" '
+    'stroke-linejoin="round"><circle cx="6" cy="19" r="3"/>'
+    '<path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/>'
+    '<circle cx="18" cy="5" r="3"/></svg>'
+)
 
 
 def _parse_route(route_str: str) -> tuple[str, str]:
@@ -157,7 +164,7 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
 
     # ─── Header ──────────────────────────────────────────
     st.sidebar.markdown(
-        f"""
+        _h(f"""
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
           <div style="width: 36px; height: 36px; border-radius: 10px;
           background: #202735; color: #fff; display: flex;
@@ -179,13 +186,13 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
             BETA
           </span>
         </div>
-        """,
+        """),
         unsafe_allow_html=True,
     )
 
     # ─── Section label ───────────────────────────────────
     st.sidebar.markdown(
-        """
+        _h("""
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <span style="font-size: 10px; font-weight: 700; color: #7c8390;
           letter-spacing: 0.1em; text-transform: uppercase;">
@@ -193,7 +200,7 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
           </span>
           <span style="font-size: 11px; color: #7c8390;">&#9881;</span>
         </div>
-        """,
+        """),
         unsafe_allow_html=True,
     )
 
@@ -228,11 +235,11 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
         else "Preview only. Live resolution is not connected."
     )
     st.sidebar.markdown(
-        f"""
+        _h(f"""
         <p style="font-size: 10px; color: #7c8390; line-height: 1.5; margin-top: 4px;">
           {demo_note}
         </p>
-        """,
+        """),
         unsafe_allow_html=True,
     )
 
@@ -261,7 +268,7 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
         pickup, dropoff = _parse_route(selected.get("route", ""))
 
         st.sidebar.markdown(
-            f"""
+            _h(f"""
             <div style="border-left: 2px solid #e8ebef; margin-left: 4px;
             padding-left: 16px; margin-top: 16px; position: relative;">
               <div style="position: absolute; left: -5px; top: 3px;
@@ -286,7 +293,7 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
             <p style="font-size: 11px; color: #7c8390; line-height: 1.7; margin-top: 14px;">
               {selected.get('summary', '')}
             </p>
-            """,
+            """),
             unsafe_allow_html=True,
         )
 
@@ -299,11 +306,11 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
     else:
         # Custom dispute form
         st.sidebar.markdown(
-            """
+            _h("""
             <p style="font-size: 11px; font-weight: 600; color: #202735; margin: 0 0 10px 0;">
               File a new dispute
             </p>
-            """,
+            """),
             unsafe_allow_html=True,
         )
 
@@ -354,7 +361,7 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
 
     # ─── Footer ──────────────────────────────────────────
     st.sidebar.markdown(
-        """
+        _h("""
         <div style="border-top: 1px solid #e8ebef; margin-top: 16px; padding-top: 12px;">
           <div style="padding: 10px 12px; background: #f5f6f8; border-radius: 8px;">
             <p style="font-size: 10px; color: #7c8390; line-height: 1.5; margin: 0;">
@@ -374,7 +381,7 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
             <span style="margin-left: auto; font-size: 9px; color: #7c8390;">&#9660;</span>
           </div>
         </div>
-        """,
+        """),
         unsafe_allow_html=True,
     )
 
