@@ -15,8 +15,8 @@ from app.components.dispute_form import render_dispute_form
 from app.components.message_log import render_message_log
 from app.components.ruling_panel import render_ruling_panel
 from app.components.evidence_panel import render_evidence_panel
+from app.components.advocate_cases_panel import render_advocate_cases_panel
 from evidence.loaders import CaseData
-from models.argument import Argument, Rebuttal
 from models.message import ConversationLog
 from models.ruling import Ruling
 
@@ -172,53 +172,8 @@ def _run_and_render(case_data: CaseData, run_mode: str):
     # -- Final ruling container --
     render_ruling_panel(ruling)
 
-    # -- Advocate case summaries --
-    st.markdown("""
-    <div style="display: flex; align-items: center; gap: 10px; margin: 24px 0 12px 0;">
-      <span style="width: 28px; height: 28px; border-radius: 8px;
-      background: rgba(102,83,202,0.1); color: #6653ca;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px;">⚖️</span>
-      <span style="font-size: 14px; font-weight: 700; color: #202735;">
-        Advocate Cases
-      </span>
-    </div>
-    """, unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(
-            """
-            <div style="border: 1px solid #e8ebef; border-radius: 12px; overflow: hidden;
-            background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="height: 3px; background: #378ADD;"></div>
-              <div style="padding: 16px 20px;">
-                <p style="font-size: 11px; font-weight: 700; color: #378ADD; margin: 0 0 12px 0;">
-                  RIDER ADVOCATE
-                </p>
-            """,
-            unsafe_allow_html=True,
-        )
-        _render_argument_summary(rider_arg)
-        if rider_reb:
-            _render_rebuttal_summary(rider_reb)
-        st.markdown("</div></div>", unsafe_allow_html=True)
-    with col2:
-        st.markdown(
-            """
-            <div style="border: 1px solid #e8ebef; border-radius: 12px; overflow: hidden;
-            background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="height: 3px; background: #D85A30;"></div>
-              <div style="padding: 16px 20px;">
-                <p style="font-size: 11px; font-weight: 700; color: #D85A30; margin: 0 0 12px 0;">
-                  DRIVER ADVOCATE
-                </p>
-            """,
-            unsafe_allow_html=True,
-        )
-        _render_argument_summary(driver_arg)
-        if driver_reb:
-            _render_rebuttal_summary(driver_reb)
-        st.markdown("</div></div>", unsafe_allow_html=True)
+    # -- Advocate cases container --
+    render_advocate_cases_panel(rider_arg, driver_arg, rider_reb, driver_reb)
 
     # -- Persist in session state --
     st.session_state["resolution"] = {
@@ -308,53 +263,8 @@ def _render_stored():
     # Ruling
     render_ruling_panel(ruling)
 
-    # Advocate summaries
-    st.markdown("""
-    <div style="display: flex; align-items: center; gap: 10px; margin: 24px 0 12px 0;">
-      <span style="width: 28px; height: 28px; border-radius: 8px;
-      background: rgba(102,83,202,0.1); color: #6653ca;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px;">⚖️</span>
-      <span style="font-size: 14px; font-weight: 700; color: #202735;">
-        Advocate Cases
-      </span>
-    </div>
-    """, unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(
-            """
-            <div style="border: 1px solid #e8ebef; border-radius: 12px; overflow: hidden;
-            background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="height: 3px; background: #378ADD;"></div>
-              <div style="padding: 16px 20px;">
-                <p style="font-size: 11px; font-weight: 700; color: #378ADD; margin: 0 0 12px 0;">
-                  RIDER ADVOCATE
-                </p>
-            """,
-            unsafe_allow_html=True,
-        )
-        _render_argument_summary(rider_arg)
-        if rider_reb:
-            _render_rebuttal_summary(rider_reb)
-        st.markdown("</div></div>", unsafe_allow_html=True)
-    with col2:
-        st.markdown(
-            """
-            <div style="border: 1px solid #e8ebef; border-radius: 12px; overflow: hidden;
-            background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-              <div style="height: 3px; background: #D85A30;"></div>
-              <div style="padding: 16px 20px;">
-                <p style="font-size: 11px; font-weight: 700; color: #D85A30; margin: 0 0 12px 0;">
-                  DRIVER ADVOCATE
-                </p>
-            """,
-            unsafe_allow_html=True,
-        )
-        _render_argument_summary(driver_arg)
-        if driver_reb:
-            _render_rebuttal_summary(driver_reb)
-        st.markdown("</div></div>", unsafe_allow_html=True)
+    # Advocate cases container
+    render_advocate_cases_panel(rider_arg, driver_arg, rider_reb, driver_reb)
 
     # Reset button
     st.markdown("---")
@@ -368,149 +278,6 @@ def _render_stored():
         st.session_state.pop("resolution", None)
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
-
-
-# --- Helper: rebuttal summary ----------------------------------------
-
-def _render_rebuttal_summary(reb: Rebuttal):
-    """Render a concise summary of an advocate's rebuttal."""
-    st.markdown(
-        """
-        <div style="margin-top: 12px; padding: 10px 12px;
-        background: rgba(102,83,202,0.04); border-radius: 8px;
-        border-left: 2px solid #6653ca;">
-          <p style="font-size: 11px; font-weight: 600; color: #6653ca; margin: 0 0 6px 0;">
-            Rebuttal
-          </p>
-        """,
-        unsafe_allow_html=True,
-    )
-    for cp in reb.counterpoints:
-        st.markdown(
-            f"""
-            <p style="font-size: 12px; color: #202735; margin: 0 0 4px 0;
-            line-height: 1.5;">
-              &middot; {cp}
-            </p>
-            """,
-            unsafe_allow_html=True,
-        )
-    if reb.reasoning:
-        st.markdown(
-            f"""
-            <p style="font-size: 11px; color: #9a9da3; margin: 6px 0 0 0;
-            font-style: italic; line-height: 1.5;">
-              {reb.reasoning}
-            </p>
-            """,
-            unsafe_allow_html=True,
-        )
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-# --- Helper: argument summary ----------------------------------------
-
-def _render_argument_summary(arg: Argument):
-    """Render a concise summary of an advocate's structured argument."""
-    remedy_labels = {
-        "refund": "Refund",
-        "compensation": "Compensation",
-        "no_action": "No Action",
-    }
-    remedy_label = remedy_labels.get(arg.requested_remedy, arg.requested_remedy)
-    amount_str = f" (${arg.requested_amount:.2f})" if arg.requested_amount > 0 else ""
-
-    st.markdown(
-        f"<p style='font-size: 13px; font-weight: 600; color: #202735; margin: 0 0 4px 0;'>"
-        f"{arg.claim}</p>",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        f"<p style='font-size: 12px; color: #7c8390; margin: 0 0 8px 0;'>"
-        f"Requested: <b style='color: #202735;'>{remedy_label}{amount_str}</b></p>",
-        unsafe_allow_html=True,
-    )
-
-    tags_html = ""
-    if arg.evidence:
-        tags_html += (
-            f"<span style='display: inline-block; background: rgba(102,83,202,0.08); "
-            f"color: #6653ca; font-size: 10px; font-weight: 600; padding: 2px 8px; "
-            f"border-radius: 4px; margin-right: 4px;'>{len(arg.evidence)} evidence items</span>"
-        )
-    if arg.policy_cited:
-        clauses = ", ".join(p.clause for p in arg.policy_cited)
-        tags_html += (
-            f"<span style='display: inline-block; background: #f5f6f8; "
-            f"color: #7c8390; font-size: 10px; font-weight: 600; padding: 2px 8px; "
-            f"border-radius: 4px; margin-right: 4px;'>{clauses}</span>"
-        )
-    if tags_html:
-        st.markdown(tags_html, unsafe_allow_html=True)
-
-    with st.expander("Full argument details"):
-        # Reasoning
-        if arg.reasoning:
-            st.markdown(
-                f"""
-                <p style="font-size: 12px; color: #202735; line-height: 1.6;
-                margin: 0 0 10px 0;">
-                  {arg.reasoning}
-                </p>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        # Evidence items
-        if arg.evidence:
-            st.markdown(
-                """
-                <p style="font-size: 10px; font-weight: 700; color: #7c8390;
-                letter-spacing: 0.1em; text-transform: uppercase; margin: 10px 0 6px 0;">
-                  Evidence
-                </p>
-                """,
-                unsafe_allow_html=True,
-            )
-            for ev in arg.evidence:
-                st.markdown(
-                    f"""
-                    <div style="display: flex; gap: 8px; margin: 4px 0;
-                    font-size: 11px; line-height: 1.5;">
-                      <span style="color: #7c8390; white-space: nowrap;">
-                        {ev.source}
-                      </span>
-                      <span style="color: #202735;">{ev.fact}</span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-        # Policy citations
-        if arg.policy_cited:
-            st.markdown(
-                """
-                <p style="font-size: 10px; font-weight: 700; color: #7c8390;
-                letter-spacing: 0.1em; text-transform: uppercase; margin: 10px 0 6px 0;">
-                  Policy cited
-                </p>
-                """,
-                unsafe_allow_html=True,
-            )
-            for pol in arg.policy_cited:
-                st.markdown(
-                    f"""
-                    <div style="font-size: 11px; line-height: 1.5; margin: 4px 0;">
-                      <span style="color: #202735; font-weight: 600;">
-                        &sect; {pol.clause} &middot; {pol.title}
-                      </span>
-                      <p style="color: #7c8390; margin: 2px 0 0 0;">
-                        {pol.relevance}
-                      </p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
 
 
 # --- Landing page ----------------------------------------------------
