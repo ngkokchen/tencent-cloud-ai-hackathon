@@ -1,5 +1,6 @@
 """Evidence panel component: shows evidence summary in a styled card container."""
 
+import base64
 import html as _html
 import textwrap
 
@@ -95,10 +96,10 @@ def render_evidence_panel(case: CaseData) -> None:
     # ── Column 1: Route Map ────────────────────────────
     map_html = get_route_map_html(case)
     if map_html:
-        escaped_map = _html.escape(map_html)
+        map_b64 = base64.b64encode(map_html.encode("utf-8")).decode("ascii")
         parts.append(_h(f"""
             <div>
-              <iframe srcdoc="{escaped_map}" width="100%" height="420"
+              <iframe src="data:text/html;base64,{map_b64}" width="100%" height="420"
               style="border: 1px solid #e8ebef; border-radius: 8px;"></iframe>
             </div>
         """))
