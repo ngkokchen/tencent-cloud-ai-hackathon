@@ -1,5 +1,7 @@
 """Message log component: renders the conversation log in a styled container."""
 
+import html as _html
+
 import streamlit as st
 
 from models.message import AgentMessage
@@ -41,23 +43,26 @@ def _should_show(msg: AgentMessage) -> bool:
     return True
 
 
-def render_single_message(msg: AgentMessage, idx: int) -> None:
-    """Render a single agent message as a styled card."""
+def _message_html(msg: AgentMessage, idx: int) -> str:
+    """Build HTML for a single message. Returns empty string if filtered out."""
     if not _should_show(msg):
-        return
+        return ""
 
     colors = AGENT_COLORS.get(msg.sender, AGENT_COLORS["system"])
     content = msg.content
     if len(content) > 3000:
         content = content[:3000] + "\n... [truncated]"
 
+    # Escape HTML in content to prevent breaking the layout
+    content = _html.escape(content)
+    # Preserve line breaks
+    content = content.replace("\n", "<br>")
+
     timestamp_str = msg.timestamp.strftime("%H:%M:%S")
 
     if msg.msg_type in ("argument", "rebuttal"):
-        # Arguments and rebuttals get highlighted boxes
         label = "ARGUMENT" if msg.msg_type == "argument" else "REBUTTAL"
-        st.markdown(
-            f"""<div style="border-left: 3px solid {colors['primary']};
+        return f"""<div style="border-left: 3px solid {colors['primary']};
             background: {colors['bg']}; padding: 12px 16px; margin: 8px 0;
             border-radius: 0 8px 8px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
             <div style="display: flex; justify-content: space-between;
@@ -76,14 +81,10 @@ def render_single_message(msg: AgentMessage, idx: int) -> None:
             <div style="font-size: 13px; line-height: 1.6; color: #202735;">
               {content}
             </div>
-            </div>""",
-            unsafe_allow_html=True,
-        )
+            </div>"""
 
     elif msg.msg_type == "ruling":
-        # Judge ruling
-        st.markdown(
-            f"""<div style="padding: 10px 16px; margin: 4px 0;
+        return f"""<div style="padding: 10px 16px; margin: 4px 0;
             border-bottom: 1px solid #f0f1f3;">
             <div style="display: flex; justify-content: space-between;
             align-items: center; margin-bottom: 4px;">
@@ -103,14 +104,10 @@ def render_single_message(msg: AgentMessage, idx: int) -> None:
             line-height: 1.5;">
               {content}
             </div>
-            </div>""",
-            unsafe_allow_html=True,
-        )
+            </div>"""
 
     elif msg.msg_type == "reasoning":
-        # Reasoning — muted italic, compact
-        st.markdown(
-            f"""<div style="padding: 8px 16px; margin: 2px 0;
+        return f"""<div style="padding: 8px 16px; margin: 2px 0;
             border-bottom: 1px solid #f0f1f3;">
             <div style="display: flex; justify-content: space-between;
             align-items: center;">
@@ -125,14 +122,11 @@ def render_single_message(msg: AgentMessage, idx: int) -> None:
             margin-top: 4px; line-height: 1.5;">
               {content}
             </div>
-            </div>""",
-            unsafe_allow_html=True,
-        )
+            </div>"""
 
     else:
-        # System and other messages — compact
-        st.markdown(
-            f"""<div style="padding: 8px 16px; margin: 2px 0;
+        # System and other messages
+        return f"""<div style="padding: 8px 16px; margin: 2px 0;
             border-bottom: 1px solid #f0f1f3;">
             <div style="display: flex; justify-content: space-between;
             align-items: center;">
@@ -147,19 +141,19 @@ def render_single_message(msg: AgentMessage, idx: int) -> None:
             line-height: 1.5;">
               {content}
             </div>
-            </div>""",
-            unsafe_allow_html=True,
-        )
+            </div>"""
 
 
 def render_conversation_container(messages: list, start_idx: int = 0) -> None:
     """
     Render the conversation inside a styled container card.
     Filters out tool_call and tool_result messages.
+    All HTML is built as a single string so Streamlit wraps it in one element.
     """
+    parts = []
+
     # ─── Container header ──────────────────────────────
-    st.markdown(
-        """
+    parts.append("""
         <div style="border: 1px solid #e8ebef; border-radius: 12px;
         background: white; margin-bottom: 20px; overflow: hidden;">
           <div style="padding: 14px 20px; border-bottom: 1px solid #e8ebef;
@@ -191,22 +185,20 @@ def render_conversation_container(messages: list, start_idx: int = 0) -> None:
             </span>
           </div>
           <div style="padding: 8px 0;">
-        """,
-        unsafe_allow_html=True,
-    )
+    """)
 
     # ─── Messages ──────────────────────────────────────
     visible_count = 0
     for i, msg in enumerate(messages[start_idx:], start=start_idx):
         if isinstance(msg, dict):
             msg = AgentMessage(**msg)
-        if _should_show(msg):
-            render_single_message(msg, i)
+        html = _message_html(msg, i)
+        if html:
+            parts.append(html)
             visible_count += 1
 
     # ─── Container footer ──────────────────────────────
-    st.markdown(
-        """
+    parts.append("""
           </div>
           <div style="padding: 10px 20px; border-top: 1px solid #e8ebef;
           display: flex; justify-content: space-between; align-items: center;">
@@ -219,9 +211,17 @@ def render_conversation_container(messages: list, start_idx: int = 0) -> None:
             </span>
           </div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    """)
+
+    # Render everything in one st.markdown call
+    st.markdown("".join(parts), unsafe_allow_html=True)
+
+
+def render_single_message(msg: AgentMessage, idx: int) -> None:
+    """Render a single agent message as a styled card (standalone use)."""
+    html = _message_html(msg, idx)
+    if html:
+        st.markdown(html, unsafe_allow_html=True)
 
 
 def render_message_log(messages: list, start_idx: int = 0) -> int:
