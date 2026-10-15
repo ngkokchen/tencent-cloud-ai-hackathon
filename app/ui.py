@@ -169,18 +169,7 @@ def _run_and_render(case_data: CaseData, run_mode: str):
     messages = log.messages
     render_message_log(messages)
 
-    # -- Final ruling --
-    st.markdown("""
-    <div style="display: flex; align-items: center; gap: 10px; margin: 24px 0 12px 0;">
-      <span style="width: 28px; height: 28px; border-radius: 8px;
-      background: rgba(29,158,117,0.1); color: #1D9E75;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px;">⚖️</span>
-      <span style="font-size: 14px; font-weight: 700; color: #202735;">
-        Final Ruling
-      </span>
-    </div>
-    """, unsafe_allow_html=True)
+    # -- Final ruling container --
     render_ruling_panel(ruling)
 
     # -- Advocate case summaries --
@@ -317,17 +306,6 @@ def _render_stored():
     render_message_log(messages)
 
     # Ruling
-    st.markdown("""
-    <div style="display: flex; align-items: center; gap: 10px; margin: 24px 0 12px 0;">
-      <span style="width: 28px; height: 28px; border-radius: 8px;
-      background: rgba(29,158,117,0.1); color: #1D9E75;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px;">⚖️</span>
-      <span style="font-size: 14px; font-weight: 700; color: #202735;">
-        Final Ruling
-      </span>
-    </div>
-    """, unsafe_allow_html=True)
     render_ruling_panel(ruling)
 
     # Advocate summaries
