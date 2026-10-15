@@ -124,6 +124,15 @@ _SIDEBAR_CSS = """
 </style>
 """
 
+# Inline SVG route icon for the logo
+_ROUTE_ICON_SVG = """
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="6" cy="19" r="3"/>
+  <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/>
+  <circle cx="18" cy="5" r="3"/>
+</svg>
+"""
+
 
 def _parse_route(route_str: str) -> tuple[str, str]:
     """Parse pickup and dropoff from a route string."""
@@ -148,19 +157,20 @@ def render_dispute_form() -> tuple[CaseData | None, str]:
 
     # ─── Header ──────────────────────────────────────────
     st.sidebar.markdown(
-        """
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+        f"""
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
           <div style="width: 36px; height: 36px; border-radius: 10px;
-          background: #202735; color: white; display: flex;
-          align-items: center; justify-content: center; font-size: 16px;">
-            &#128739;
+          background: #202735; color: #fff; display: flex;
+          align-items: center; justify-content: center;">
+            {_ROUTE_ICON_SVG}
           </div>
           <div>
-            <div style="font-size: 18px; font-weight: 800; color: #202735;
-            letter-spacing: -0.5px; line-height: 1.1;">
+            <div style="font-size: 22px; font-weight: 800; color: #202735;
+            letter-spacing: -1px; line-height: 1.1;
+            font-family: 'Manrope', sans-serif;">
               ryde<span style="color: #6653ca;">.</span>
             </div>
-            <div style="font-size: 9px; color: #7c8390; letter-spacing: 0.1em; margin-top: 2px;">
+            <div style="font-size: 10px; color: #7c8390; letter-spacing: 0.08em; margin-top: 1px;">
               DISPUTE RESOLVER
             </div>
           </div>
