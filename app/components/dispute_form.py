@@ -128,6 +128,25 @@ _SIDEBAR_CSS = _h("""
     box-shadow: 0 6px 14px rgba(102,83,202,0.22) !important;
     filter: none !important;
 }
+
+/* Force light theme styles regardless of system preference.
+   The UI was designed for light mode only. */
+@media (prefers-color-scheme: dark) {
+    [data-testid="stSidebar"] {
+        background-color: #ffffff !important;
+    }
+    [data-testid="stSidebar"] .stMarkdown p,
+    [data-testid="stSidebar"] .stMarkdown span,
+    [data-testid="stSidebar"] .stMarkdown div {
+        color: inherit;
+    }
+    [data-testid="stSidebar"] .stSelectbox > div > div,
+    [data-testid="stSidebar"] .stTextInput > div > div,
+    [data-testid="stSidebar"] .stTextArea textarea {
+        background-color: #f5f6f8 !important;
+        color: #202735 !important;
+    }
+}
 </style>
 """)
 

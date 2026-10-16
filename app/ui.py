@@ -80,6 +80,24 @@ def _inject_css():
         unsafe_allow_html=True,
     )
 
+    # Force light theme if browser/system prefers dark — UI designed for light mode only
+    st.markdown(
+        """
+        <style>
+        @media (prefers-color-scheme: dark) {
+            .stApp { background-color: #ffffff !important; color: #202735 !important; }
+            [data-testid="stAppViewContainer"] { background-color: #ffffff !important; }
+            .main { background-color: #ffffff !important; }
+            .stMarkdown p, .stMarkdown span, .stMarkdown div,
+            .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
+                color: inherit;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
 # --- Run resolution + progressive render -----------------------------
 
