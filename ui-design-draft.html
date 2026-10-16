@@ -8,10 +8,7 @@
   <script src="https://unpkg.com/@fortawesome/fontawesome-free@6.7.2/js/all.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    * {
-      scrollbar-width: none;
-      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-    }
+    * { scrollbar-width: none; scrollbar-color: rgba(0,0,0,0.2) transparent; }
   </style>
 </head>
 
@@ -24,63 +21,472 @@
 <style>
 body{margin:0}button,summary{cursor:pointer}button,a,summary{transition:all .18s}button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid #8160cc;outline-offset:3px}button:hover{filter:brightness(.97)}details summary{list-style:none}details summary::-webkit-details-marker{display:none}details[open]>summary .chevron{transform:rotate(180deg)}.state-tab[aria-selected=true]{background:var(--color-surface);color:var(--color-ink);box-shadow:0 1px 4px #2221}.dark{--color-canvas:#161a23;--color-surface:#202631;--color-ink:#e8ebf2;--color-muted:#a2aabb;--color-line:#343b48}.dark .soft-light{background:#272f3a}.dark .map{filter:brightness(.76)}.feed-item{animation:arrive .4s both}@keyframes arrive{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}.dot-grid{background-image:radial-gradient(#b9b0d5 1px,transparent 1px);background-size:20px 20px}
 </style>
+
 <div class="min-h-screen lg:grid lg:grid-cols-[258px_1fr]">
+<!-- ============ SIDEBAR ============ -->
 <aside class="border-r border-line bg-surface lg:sticky lg:top-0 lg:h-screen flex flex-col z-20">
 <div class="px-6 h-[83px] flex items-center gap-3 border-b border-line"><div class="bg-ink text-surface w-9 h-9 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-route"></i></div><div><div class="font-display font-extrabold text-[23px] tracking-[-1px] leading-6">ryde<span class="text-primary">.</span></div><div class="text-[10px] text-muted tracking-wide mt-1">DISPUTE RESOLVER</div></div><span class="ml-auto text-[9px] border border-line rounded px-1.5 py-0.5 text-muted">BETA</span></div>
 <div class="p-5 flex-1">
 <div class="flex justify-between items-center mb-5"><span class="label">Resolution workspace</span><i class="fa-solid fa-sliders text-muted text-xs"></i></div>
 <div class="flex p-1 bg-canvas rounded-lg gap-1 mb-6" role="radiogroup" aria-label="Input method"><label class="flex-1 text-center text-[11px] py-2 rounded-md bg-surface shadow-sm cursor-pointer" id="sample-label"><input class="sr-only" type="radio" name="method" value="sample" checked onchange="setMethod('sample')">Pick sample case</label><label class="flex-1 text-center text-[11px] py-2 rounded-md text-muted cursor-pointer" id="custom-label"><input class="sr-only" type="radio" name="method" value="custom" onchange="setMethod('custom')">File custom dispute</label></div>
-<div id="sample-form"><label class="label block mb-2" for="case">Sample case</label><select id="case" class="field" onchange="changeCase(this.value)"><option value="route">Route deviation · RD-1024</option><option value="no-show">No-show charge · NS-1025</option></select><div class="border-l-2 border-line ml-1 pl-4 mt-5 space-y-4 relative"><div class="text-xs"><span class="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-surface border-2 border-primary"></span><span class="text-[10px] text-muted block mb-1">PICKUP</span>Marina Bay Sands</div><div class="text-xs"><span class="absolute -left-[5px] bottom-1 w-2 h-2 rounded-sm bg-ink"></span><span class="text-[10px] text-muted block mb-1">DROPOFF</span>Orchard Central</div></div><p id="case-summary" class="text-[11px] leading-[1.7] text-muted mt-5">Rider reports an unnecessary detour and requests a refund of the extra fare.</p></div>
-<form id="custom-form" class="hidden space-y-3" onsubmit="event.preventDefault();resolveCase()"><label class="block text-[11px]">Dispute type<select class="field mt-1"><option>Route deviation</option><option>No-show charge</option></select></label><label class="block text-[11px]">Trip ID<input class="field mt-1" placeholder="e.g. TRP-2048" required></label><label class="block text-[11px]">Complaint description<textarea class="field mt-1 h-20 resize-none" placeholder="Tell us what happened…" required></textarea></label><div class="grid grid-cols-2 gap-2"><label class="text-[11px]">Rider ID<input class="field mt-1" placeholder="R-128" required></label><label class="text-[11px]">Driver ID<input class="field mt-1" placeholder="D-042" required></label></div></form>
-<button onclick="resolveCase()" class="w-full bg-primary text-white text-xs font-semibold py-3 rounded-lg flex justify-center items-center gap-2 mt-5 shadow-[0_4px_10px_#6653ca22]"><i class="fa-solid fa-bolt text-[11px]"></i>Resolve Dispute<i class="fa-solid fa-arrow-right ml-3 text-[10px]"></i></button>
-<div class="border-t border-line mt-6 pt-5"><label class="flex items-center justify-between text-xs font-medium cursor-pointer">Demo mode<input id="demo" type="checkbox" checked class="accent-primary w-4 h-4" onchange="document.getElementById('demo-note').textContent=this.checked?'Uses simulated agent responses. No real charges or account changes.':'Preview only. Live resolution is not connected.'"></label><p id="demo-note" class="text-[10px] text-muted leading-relaxed mt-2">Uses simulated agent responses. No real charges or account changes.</p></div>
+<div id="sample-form"><label class="label block mb-2" for="case">Sample case</label><select id="case" class="field" onchange="changeCase(this.value)"><option value="">Loading cases...</option></select><div id="case-route" class="border-l-2 border-line ml-1 pl-4 mt-5 space-y-4 relative hidden"><div class="text-xs"><span class="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-surface border-2 border-primary"></span><span class="text-[10px] text-muted block mb-1">PICKUP</span><span id="case-pickup"></span></div><div class="text-xs"><span class="absolute -left-[5px] bottom-1 w-2 h-2 rounded-sm bg-ink"></span><span class="text-[10px] text-muted block mb-1">DROPOFF</span><span id="case-dropoff"></span></div></div><p id="case-summary" class="text-[11px] leading-[1.7] text-muted mt-5">Select a case to begin.</p></div>
+<form id="custom-form" class="hidden space-y-3" onsubmit="event.preventDefault();resolveCase()"><label class="block text-[11px]">Dispute type<select class="field mt-1"><option>Route deviation</option><option>No-show charge</option></select></label><label class="block text-[11px]">Trip ID<input class="field mt-1" placeholder="e.g. TRP-2048" required></label><label class="block text-[11px]">Complaint description<textarea class="field mt-1 h-20 resize-none" placeholder="Tell us what happened..." required></textarea></label><div class="grid grid-cols-2 gap-2"><label class="text-[11px]">Rider ID<input class="field mt-1" placeholder="R-128" required></label><label class="text-[11px]">Driver ID<input class="field mt-1" placeholder="D-042" required></label></div></form>
+<button id="resolve-btn" onclick="resolveCase()" class="w-full bg-primary text-white text-xs font-semibold py-3 rounded-lg flex justify-center items-center gap-2 mt-5 shadow-[0_4px_10px_#6653ca22]"><i class="fa-solid fa-bolt text-[11px]"></i>Resolve Dispute<i class="fa-solid fa-arrow-right ml-3 text-[10px]"></i></button>
+<div class="border-t border-line mt-6 pt-5"><label class="flex items-center justify-between text-xs font-medium cursor-pointer">Demo mode<input id="demo" type="checkbox" checked class="accent-primary w-4 h-4"></label><p class="text-[10px] text-muted leading-relaxed mt-2">Uses simulated agent responses. No real charges or account changes.</p></div>
 </div>
-<div class="px-5 pb-5 hidden lg:block"><div class="p-3 rounded-lg bg-canvas text-[10px] text-muted leading-relaxed"><i class="fa-solid fa-shield-halved text-primary mr-1"></i> Balanced by design.<br><span class="pl-4">Every side heard. Every decision explained.</span></div><div class="flex items-center gap-2 pt-5"><div class="w-7 h-7 rounded-full bg-[#eeeaf8] text-primary flex items-center justify-center text-[10px] font-bold">OP</div><span class="text-xs font-medium">Operations workspace</span><i class="fa-solid fa-chevron-down text-[9px] text-muted ml-auto"></i></div></div>
+<div class="px-5 pb-5 hidden lg:block"><div class="p-3 rounded-lg bg-canvas text-[10px] text-muted leading-relaxed"><i class="fa-solid fa-shield-halved text-primary mr-1"></i> Balanced by design.<br><span class="pl-4">Every side heard. Every decision explained.</span></div></div>
 </aside>
+
+<!-- ============ MAIN ============ -->
 <div class="min-w-0">
-<header class="h-[83px] border-b border-line bg-surface px-5 xl:px-9 flex justify-between items-center gap-4"><div class="flex gap-2 items-center text-xs text-muted"><span>Workspace</span><i class="fa-solid fa-chevron-right text-[8px]"></i><span class="text-ink font-medium">Dispute resolution</span></div><div class="flex items-center gap-4"><span class="hidden md:flex text-[10px] items-center gap-2 text-muted"><span class="w-1.5 h-1.5 bg-success rounded-full"></span>All agents available</span><button onclick="document.body.classList.toggle('dark')" aria-label="Toggle light and dark mode" class="w-8 h-8 rounded-lg border border-line text-muted"><i class="fa-regular fa-moon text-xs"></i></button></div></header>
+<header class="h-[83px] border-b border-line bg-surface px-5 xl:px-9 flex justify-between items-center gap-4"><div class="flex gap-2 items-center text-xs text-muted"><span>Workspace</span><i class="fa-solid fa-chevron-right text-[8px]"></i><span class="text-ink font-medium">Dispute resolution</span></div><div class="flex items-center gap-4"><span class="hidden md:flex text-[10px] items-center gap-2 text-muted"><span class="w-1.5 h-1.5 bg-success rounded-full"></span>All agents available</span><button onclick="document.body.classList.toggle('dark')" aria-label="Toggle dark mode" class="w-8 h-8 rounded-lg border border-line text-muted"><i class="fa-regular fa-moon text-xs"></i></button></div></header>
 <main class="max-w-[1500px] mx-auto px-5 xl:px-9 py-7">
-<div class="flex flex-wrap justify-between gap-4 items-start mb-6"><div><div class="label mb-2">Resolution center</div><h1 class="font-display font-extrabold text-[26px] tracking-[-1px]">A fair outcome. A clear explanation.</h1><p class="text-xs text-muted mt-2">Multi-agent autonomous dispute resolution for ride-hailing.</p></div><div class="flex rounded-lg bg-[#e9ecf1] dark:bg-canvas p-1 mt-1" role="tablist" aria-label="Preview state"><button id="landing-tab" class="state-tab rounded-md px-3 py-2 text-[11px] text-muted" role="tab" aria-selected="false" onclick="showState('landing')">Overview</button><button id="active-tab" class="state-tab rounded-md px-3 py-2 text-[11px] text-muted" role="tab" aria-selected="true" onclick="showState('active')">Active dispute</button></div></div>
+<div class="flex flex-wrap justify-between gap-4 items-start mb-6"><div><div class="label mb-2">Resolution center</div><h1 class="font-display font-extrabold text-[26px] tracking-[-1px]">A fair outcome. A clear explanation.</h1><p class="text-xs text-muted mt-2">Multi-agent autonomous dispute resolution for ride-hailing.</p></div><div class="flex rounded-lg bg-[#e9ecf1] dark:bg-canvas p-1 mt-1" role="tablist"><button id="landing-tab" class="state-tab rounded-md px-3 py-2 text-[11px] text-muted" role="tab" aria-selected="false" onclick="showState('landing')">Overview</button><button id="active-tab" class="state-tab rounded-md px-3 py-2 text-[11px] text-muted" role="tab" aria-selected="true" onclick="showState('active')">Active dispute</button></div></div>
+
+<!-- ===== LANDING ===== -->
 <section id="landing" class="hidden" aria-label="Landing state">
 <div class="panel overflow-hidden grid md:grid-cols-[1.15fr_1fr] min-h-[325px]"><div class="p-8 lg:p-10"><span class="tag bg-primary/10 text-primary"><i class="fa-solid fa-scale-balanced"></i> THREE PERSPECTIVES. ONE FAIR DECISION.</span><h2 class="font-display text-4xl xl:text-[46px] font-extrabold leading-[1.13] tracking-[-2px] mt-6">Less back-and-forth.<br>More moving forward.</h2><p class="text-sm leading-6 text-muted max-w-md mt-5">Give every dispute the attention it deserves. Independent advocates examine the evidence, challenge assumptions, and bring both sides to a reasoned resolution.</p><button onclick="showState('active')" class="mt-6 text-primary text-xs font-bold">Explore a sample resolution <i class="fa-solid fa-arrow-right ml-2"></i></button></div><div class="dot-grid bg-[#f0edf8] p-8 flex flex-col justify-center gap-4"><div class="bg-white rounded-xl p-4 shadow-sm flex gap-3 items-center mr-8"><div class="mini bg-rider/10 text-rider"><i class="fa-regular fa-user"></i></div><div class="text-ink"><b class="text-xs block">Rider Advocate</b><span class="text-[11px] text-muted">A voice for the rider</span></div><i class="fa-solid fa-check ml-auto text-rider"></i></div><div class="bg-white rounded-xl p-4 shadow-sm flex gap-3 items-center ml-8"><div class="mini bg-driver/10 text-driver"><i class="fa-solid fa-car"></i></div><div class="text-ink"><b class="text-xs block">Driver Advocate</b><span class="text-[11px] text-muted">Context from behind the wheel</span></div><i class="fa-solid fa-check ml-auto text-driver"></i></div><div class="bg-[#302745] text-white rounded-xl p-5 shadow-lg flex gap-3 items-center mx-4"><div class="mini bg-white/10"><i class="fa-solid fa-scale-balanced"></i></div><div><b class="text-sm block">Independent Judge</b><span class="text-[11px] text-purple-200">Evidence first. Policy grounded.</span></div></div></div></div>
-<div class="flex justify-between items-center mt-9 mb-4"><h3 class="font-display font-bold text-lg">From complaint to clarity</h3><span class="text-xs text-muted">An explainable, three-phase process</span></div><div class="grid md:grid-cols-3 gap-4"><article class="panel p-6"><span class="label text-primary">01 / Gather</span><h3 class="font-semibold mt-3 text-sm">Independent investigation</h3><p class="text-xs text-muted leading-5 mt-2">Rider and driver advocates gather trip, fare, chat, and policy evidence in parallel.</p></article><article class="panel p-6"><span class="label text-primary">02 / Challenge</span><h3 class="font-semibold mt-3 text-sm">A balanced exchange</h3><p class="text-xs text-muted leading-5 mt-2">Both advocates present their arguments and test the other side’s reasoning with rebuttals.</p></article><article class="panel p-6"><span class="label text-primary">03 / Resolve</span><h3 class="font-semibold mt-3 text-sm">A transparent ruling</h3><p class="text-xs text-muted leading-5 mt-2">The judge delivers a decision, amount, confidence score, and an explanation for each party.</p></article></div><div class="panel p-5 mt-5 flex flex-wrap items-center justify-between gap-4"><div><p class="font-semibold text-sm">Ready to hear both sides?</p><p class="text-xs text-muted mt-1">Pick a sample case or file a custom dispute from the sidebar.</p></div><div class="flex gap-2"><span class="tag bg-canvas text-muted">Route deviation</span><span class="tag bg-canvas text-muted">No-show charge</span></div></div>
+<div class="flex justify-between items-center mt-9 mb-4"><h3 class="font-display font-bold text-lg">From complaint to clarity</h3><span class="text-xs text-muted">An explainable, three-phase process</span></div><div class="grid md:grid-cols-3 gap-4"><article class="panel p-6"><span class="label text-primary">01 / Gather</span><h3 class="font-semibold mt-3 text-sm">Independent investigation</h3><p class="text-xs text-muted leading-5 mt-2">Rider and driver advocates gather trip, fare, chat, and policy evidence in parallel.</p></article><article class="panel p-6"><span class="label text-primary">02 / Challenge</span><h3 class="font-semibold mt-3 text-sm">A balanced exchange</h3><p class="text-xs text-muted leading-5 mt-2">Both advocates present their arguments and test the other side's reasoning with rebuttals.</p></article><article class="panel p-6"><span class="label text-primary">03 / Resolve</span><h3 class="font-semibold mt-3 text-sm">A transparent ruling</h3><p class="text-xs text-muted leading-5 mt-2">The judge delivers a decision, amount, confidence score, and an explanation for each party.</p></article></div>
+<div class="panel p-5 mt-5 flex flex-wrap items-center justify-between gap-4"><div><p class="font-semibold text-sm">Ready to hear both sides?</p><p class="text-xs text-muted mt-1">Pick a sample case from the sidebar and click Resolve.</p></div><div class="flex gap-2"><span class="tag bg-canvas text-muted">Route deviation</span><span class="tag bg-canvas text-muted">No-show charge</span></div></div>
 </section>
+
+<!-- ===== ACTIVE DISPUTE (dynamic) ===== -->
 <section id="active" aria-label="Active dispute view">
-<div class="panel px-5 py-4 mb-4 flex flex-wrap justify-between items-center gap-4"><div class="flex items-center gap-3"><div class="mini bg-primary/10 text-primary"><i class="fa-solid fa-route text-sm"></i></div><div><h2 class="font-display font-bold text-sm">Route deviation <span class="text-muted font-normal ml-2 text-xs">#RD-1024</span></h2><p class="text-[11px] text-muted mt-1">Marina Bay Sands <i class="fa-solid fa-arrow-right text-[8px] mx-1"></i> Orchard Central <span class="mx-1">·</span> 18 Jun, 14:32</p></div></div><div class="flex items-center gap-3"><span class="tag bg-canvas text-muted">Illustrative sample</span><span id="status" class="tag bg-success/10 text-success"><i class="fa-solid fa-circle-check"></i>Resolved</span></div></div>
-<div class="panel flex items-center justify-between px-5 py-3 mb-5 gap-3 text-[11px]"><div class="flex items-center gap-2"><span class="mini !h-6 !w-6 rounded-full bg-success/10 text-success"><i class="fa-solid fa-check text-[9px]"></i></span><span class="font-medium">Evidence gathering</span><span class="hidden xl:inline text-muted">Parallel investigation</span></div><div class="h-px bg-line flex-1"></div><div class="flex items-center gap-2"><span class="mini !h-6 !w-6 rounded-full bg-success/10 text-success"><i class="fa-solid fa-check text-[9px]"></i></span><span class="font-medium">Rebuttals</span></div><div class="h-px bg-line flex-1"></div><div class="flex items-center gap-2"><span class="mini !h-6 !w-6 rounded-full bg-primary text-white"><i class="fa-solid fa-gavel text-[9px]"></i></span><span class="font-semibold text-primary">Final ruling</span></div></div>
-<details open class="panel mb-5"><summary class="px-5 py-4 flex justify-between items-center border-b border-line"><span class="flex gap-2.5 items-center font-display font-bold text-sm"><i class="fa-solid fa-layer-group text-muted text-xs"></i>Evidence room<span class="tag bg-canvas text-muted ml-1">6 sources</span></span><span class="text-[10px] text-muted flex items-center gap-3">Trip #TRP-8821<i class="fa-solid fa-chevron-down chevron"></i></span></summary>
-<div class="p-4 grid lg:grid-cols-[1.05fr_1fr_.86fr] gap-4">
-<div><div class="map h-[196px] rounded-lg overflow-hidden relative bg-[#edf0eb] border border-line"><svg viewBox="0 0 420 240" class="w-full h-full" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Schematic map comparing optimal route with a longer actual route from Marina Bay Sands to Orchard Central"><rect width="420" height="240" fill="#eef0eb"/><path d="M335 -20 Q300 80 370 132 T360 260 L450 260 L450 -20Z" fill="#d7e6ea"/><g fill="#e0e7d9"><path d="M30 20h70v45H30zM190 15h55v58h-55zM210 157h48v59h-48zM52 164h64v60H52z"/></g><g fill="none" stroke="#fff" stroke-width="9"><path d="M-20 85L440 188M-10 140L360 240M78-10L8 250M158-20L81 260M255-10L178 260M323-10L249 260M-10 19L350 104"/></g><g fill="none" stroke="#d9dfd6" stroke-width="1"><path d="M-20 85L440 188M-10 140L360 240M78-10L8 250M158-20L81 260M255-10L178 260M323-10L249 260"/></g><g font-family="DM Sans,sans-serif" fill="#9aa295" font-size="8"><text x="50" y="125" transform="rotate(15 50 125)">RIVER VALLEY ROAD</text><text x="170" y="30">FORT CANNING</text><text x="319" y="191">MARINA BAY</text></g><path d="M293 182L252 170L280 84L127 47" fill="none" stroke="#b0a3d9" stroke-width="4" stroke-dasharray="6 4"/><path d="M293 182L177 152L203 77L111 55L127 47" fill="none" stroke="#6653ca" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="293" cy="182" r="7" fill="#6653ca" stroke="white" stroke-width="3"/><circle cx="127" cy="47" r="7" fill="#fff" stroke="#6653ca" stroke-width="3"/><g font-size="9" font-family="DM Sans,sans-serif" fill="#3c4250"><rect x="136" y="30" width="91" height="23" rx="5" fill="white"/><text x="144" y="45">Orchard Central</text><rect x="257" y="198" width="107" height="23" rx="5" fill="white"/><text x="265" y="213">Marina Bay Sands</text></g></svg><span class="absolute left-2 bottom-2 bg-white/90 rounded px-1.5 py-1 text-[8px] text-[#7c8390]">SCHEMATIC · NOT TO SCALE</span></div><div class="flex items-center justify-between mt-3 text-[10px] text-muted"><span><span class="inline-block w-4 h-[3px] bg-primary mr-1 align-middle"></span>Actual route</span><span><span class="inline-block w-4 border-t-2 border-dashed border-[#b0a3d9] mr-1 align-middle"></span>Optimal route</span><span class="text-driver font-semibold">+2.4 km detour</span></div></div>
-<div class="px-1"><div class="label mb-3">Trip & route analysis</div><div class="grid grid-cols-3 gap-2 pb-4 border-b border-line"><div><p class="text-[10px] text-muted">Est. distance</p><p class="text-lg font-display font-bold mt-1">5.2 <span class="text-[10px] font-normal text-muted">km</span></p><p class="text-[10px] text-muted mt-2">Opt. route traffic</p><span class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold mt-1" style="background:rgba(239,159,39,0.12);color:#c78a1c;">Moderate</span></div><div><p class="text-[10px] text-muted">Actual distance</p><p class="text-lg font-display font-bold mt-1">7.6 <span class="text-[10px] font-normal text-muted">km</span></p><p class="text-[10px] text-muted mt-2">Act. route traffic</p><span class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold mt-1" style="background:rgba(226,75,74,0.12);color:#c43d3c;">Heavy</span></div><div><p class="text-[10px] text-muted">Deviation</p><p class="text-lg font-display font-bold text-driver mt-1">46<span class="text-xs">%</span></p><p class="text-[10px] text-muted mt-2">Extra time</p><p class="text-lg font-display font-bold mt-1">8 <span class="text-[10px] font-normal text-muted">min</span></p></div></div><div class="bg-canvas rounded-lg p-3"><div class="flex justify-between text-xs font-semibold mb-2"><span>Fare breakdown</span><span>S$ 18.40</span></div><div class="grid grid-cols-2 gap-y-1.5 text-[10px] text-muted"><span>Base fare</span><span class="text-right">S$ 3.00</span><span>Distance · Time</span><span class="text-right">S$ 11.40 · 4.00</span><span class="text-driver">Disputed overcharge</span><span class="text-right text-driver font-medium">S$ 4.80</span></div></div></div>
-<div class="lg:border-l border-line lg:pl-4"><div class="label mb-3">Chat highlights</div><div class="bg-rider/5 border-l-2 border-rider/50 pl-2.5 py-1.5 mb-2"><div class="flex justify-between text-[9px]"><b class="text-rider">Rider</b><span class="text-muted">Concerned · 14:41</span></div><p class="text-[10px] leading-4 mt-1">“Why are we taking the longer way?”</p></div><div class="bg-driver/5 border-l-2 border-driver/50 pl-2.5 py-1.5"><div class="flex justify-between text-[9px]"><b class="text-driver">Driver</b><span class="text-muted">Neutral · 14:42</span></div><p class="text-[10px] leading-4 mt-1">“Avoiding traffic near the junction.”</p></div><div class="border-t border-line mt-3 pt-3 flex gap-4"><div class="flex gap-2"><div class="mini !w-7 !h-7 bg-rider/10 text-rider text-[10px]">JL</div><div class="text-[10px]"><b class="font-medium">Jamie L.</b><p class="text-muted text-[9px]">Rider · R-128</p></div></div><div class="flex gap-2"><div class="mini !w-7 !h-7 bg-driver/10 text-driver text-[10px]">AT</div><div class="text-[10px]"><b class="font-medium">Alex T.</b><p class="text-muted text-[9px]">Driver · D-042</p></div></div></div></div>
-</div></details>
-<div class="grid xl:grid-cols-[1.06fr_1fr] gap-5 items-start">
-<section class="panel overflow-hidden"><div class="flex justify-between items-center px-5 py-4 border-b border-line"><h3 class="font-display font-bold text-sm"><i class="fa-regular fa-comments text-muted mr-2"></i>Agent conversation</h3><button id="replay" onclick="replayFeed()" class="text-[10px] text-muted hover:text-primary"><i class="fa-solid fa-rotate-right mr-1"></i>Replay</button></div><div class="px-5 py-3 bg-canvas/50 flex gap-4 text-[9px] border-b border-line"><span class="text-rider">● Rider Advocate</span><span class="text-driver">● Driver Advocate</span><span class="text-judge">● Judge</span></div>
-<div id="feed" class="p-5 space-y-4">
-<div class="feed-item flex items-center gap-2 text-[9px] text-muted"><span class="font-mono">14:48:02</span><span class="tag !py-0 bg-canvas">SYS</span><span>Case opened. Advocates investigating in parallel.</span></div>
-<div class="feed-item"><div class="flex gap-2 items-center text-[10px]"><span class="mini !w-6 !h-6 bg-rider/10 text-rider"><i class="fa-regular fa-user"></i></span><b class="text-rider">Rider Advocate</b><span class="text-[8px] text-muted bg-canvas rounded px-1">TOOL</span><span class="ml-auto font-mono text-[9px] text-muted">14:48:03</span></div><p class="ml-8 mt-1 text-[11px]">Inspecting trip telemetry and fare calculation.</p><details class="ml-8 mt-2 rounded-md border border-line"><summary class="px-2 py-1.5 text-[9px] text-muted flex items-center gap-2"><i class="fa-solid fa-code"></i>RESULT · get_trip_evidence()<i class="fa-solid fa-chevron-down ml-auto chevron"></i></summary><pre class="p-3 text-[10px] overflow-auto bg-canvas">{"optimal_km": 5.2, "actual_km": 7.6,
- "extra_minutes": 8, "overcharge_sgd": 4.80}</pre></details></div>
-<div class="feed-item"><div class="flex gap-2 items-center text-[10px]"><span class="mini !w-6 !h-6 bg-driver/10 text-driver"><i class="fa-solid fa-car"></i></span><b class="text-driver">Driver Advocate</b><span class="text-[8px] text-muted bg-canvas rounded px-1">THINK</span><span class="ml-auto font-mono text-[9px] text-muted">14:48:06</span></div><p class="ml-8 mt-1 text-[11px] italic text-muted leading-5">Checking whether traffic conditions justify the route change.</p></div>
-<div class="feed-item border-l-2 border-rider bg-rider/5 rounded-r-lg p-3"><div class="flex justify-between items-center text-[10px]"><b class="text-rider">Rider Advocate <span class="font-normal text-[8px] ml-2 tracking-wide">ARGUMENT</span></b><span class="font-mono text-[9px] text-muted">14:48:12</span></div><p class="text-[11px] leading-5 mt-1">The route was 46% longer than estimated. No rider consent or road closure supports the detour. Request: <b>S$ 4.80 refund.</b></p></div>
-<div class="feed-item border-l-2 border-driver bg-driver/5 rounded-r-lg p-3"><div class="flex justify-between items-center text-[10px]"><b class="text-driver">Driver Advocate <span class="font-normal text-[8px] ml-2 tracking-wide">REBUTTAL</span></b><span class="font-mono text-[9px] text-muted">14:48:18</span></div><p class="text-[11px] leading-5 mt-1">Traffic explains the driver’s intent, but not the full detour. A fare adjustment is reasonable; a driver penalty is not.</p></div>
-<div class="feed-item"><div class="flex gap-2 items-center text-[10px]"><span class="mini !w-6 !h-6 bg-judge/10 text-judge"><i class="fa-solid fa-scale-balanced"></i></span><b class="text-judge">Judge</b><span class="text-[8px] text-judge bg-judge/10 rounded px-1">RULING</span><span class="ml-auto font-mono text-[9px] text-muted">14:48:24</span></div><p class="ml-8 mt-1 text-[11px] leading-5">Refund the excess fare. Retain the valid trip fare and apply no driver penalty. Both parties’ explanations are ready.</p></div>
-</div><div class="px-5 py-3 border-t border-line flex justify-between text-[9px] text-muted"><span><i class="fa-solid fa-circle-check text-success mr-1"></i><span id="feed-state">Resolution complete</span></span><span>3 agents · 22s elapsed · Demo</span></div></section>
-<div class="space-y-4"><section class="panel overflow-hidden !border-success/30"><div class="px-5 py-4 bg-[#eaf6f0] soft-light border-b border-success/20"><div class="flex justify-between items-center"><span class="text-[10px] font-bold text-success tracking-[.12em]"><i class="fa-solid fa-circle-check mr-1"></i> FINAL RULING</span><span class="text-[9px] text-success border border-success/20 rounded px-2 py-1">Judge verified</span></div><div class="flex justify-between items-end mt-3"><div><h3 class="font-display text-xl font-extrabold text-[#167656] dark:text-success">Refund approved</h3><p class="text-[11px] text-[#578773] mt-1">Return excess fare to the rider.</p></div><div class="text-[30px] font-display font-extrabold text-[#167656] tracking-[-1px]"><span class="text-sm font-medium mr-1">S$</span>4.80</div></div></div>
-<div class="p-5"><div class="flex justify-between text-[11px] mb-2"><span class="font-medium">Decision confidence <i class="fa-regular fa-circle-question text-muted ml-1" title="Illustrative judge confidence, not a calibrated probability"></i></span><span class="font-bold text-success">92% <span class="font-normal text-muted ml-1">High</span></span></div><div role="meter" aria-label="Decision confidence" aria-valuemin="0" aria-valuemax="100" aria-valuenow="92" class="h-1.5 rounded-full bg-success/10"><div class="w-[92%] h-full rounded-full bg-success"></div></div><div class="grid sm:grid-cols-2 gap-4 mt-5"><div><div class="text-[10px] font-semibold text-rider mb-2"><i class="fa-regular fa-user mr-1"></i>For the rider</div><p class="text-[11px] leading-[1.8] text-muted">You were charged for an unsupported detour. <span class="text-ink">S$ 4.80 will be refunded</span> to your original payment method.</p></div><div class="sm:border-l border-line sm:pl-4"><div class="text-[10px] font-semibold text-driver mb-2"><i class="fa-solid fa-car mr-1"></i>For the driver</div><p class="text-[11px] leading-[1.8] text-muted">Your traffic concern was considered. The excess fare is adjusted, but <span class="text-ink">no penalty applies</span> to your account.</p></div></div><div class="border-t border-line mt-4 pt-4"><div class="label mb-2">Policy applied <span class="font-normal normal-case tracking-normal">· illustrative clauses</span></div><div class="text-[10px] flex justify-between py-1"><span>§ 3.2 · Reasonable route selection</span><i class="fa-solid fa-check text-success"></i></div><div class="text-[10px] flex justify-between py-1"><span>§ 5.1 · Excess fare reimbursement</span><i class="fa-solid fa-check text-success"></i></div></div><div class="rounded-md bg-canvas p-2.5 flex gap-2 mt-3 text-[9px] text-muted leading-4"><i class="fa-solid fa-shield-halved mt-0.5 text-success"></i>Verification passed: fare arithmetic checked, both arguments reviewed, and remedy matched to cited policy.</div></div></section>
-<section class="panel p-4"><div class="flex items-center justify-between mb-3"><h3 class="font-display text-sm font-bold">Advocate cases</h3><i class="fa-solid fa-scale-balanced text-muted text-xs"></i></div><div class="grid grid-cols-2 gap-4"><div><div class="text-[10px] font-bold text-rider mb-2">Rider Advocate</div><p class="text-[11px] font-medium">Unsupported route deviation</p><p class="text-[10px] text-muted mt-1">Refund requested <b class="text-ink">S$ 4.80</b></p><div class="flex gap-1 mt-2"><span class="tag bg-rider/5 text-rider !text-[8px]">4 evidence items</span><span class="tag bg-canvas text-muted !text-[8px]">§ 3.2, 5.1</span></div><details class="mt-3 text-[10px]"><summary class="text-muted">View argument <i class="fa-solid fa-chevron-down text-[8px] ml-1 chevron"></i></summary><p class="leading-5 mt-2">GPS traces, estimated route, fare records, and chat support an excess fare refund. Counterpoint: moderate traffic alone does not justify the full deviation.</p></details></div><div class="border-l border-line pl-4"><div class="text-[10px] font-bold text-driver mb-2">Driver Advocate</div><p class="text-[11px] font-medium">Traffic-motivated detour</p><p class="text-[10px] text-muted mt-1">No penalty <b class="text-ink">S$ 0.00</b></p><div class="flex gap-1 mt-2"><span class="tag bg-driver/5 text-driver !text-[8px]">3 evidence items</span><span class="tag bg-canvas text-muted !text-[8px]">§ 3.2</span></div><details class="mt-3 text-[10px]"><summary class="text-muted">View argument <i class="fa-solid fa-chevron-down text-[8px] ml-1 chevron"></i></summary><p class="leading-5 mt-2">Traffic conditions, trip completion, and driver chat suggest good intent. Counterpoint: reimburse the excess fare without inferring misconduct.</p></details></div></div></section></div>
-</div><p class="text-center text-[9px] text-muted mt-5"><i class="fa-solid fa-flask mr-1"></i>Demo workspace · All trip data, policies, and outcomes shown are illustrative. No financial action is taken.</p>
+<div id="active-content"><div class="panel p-12 text-center text-muted text-sm"><i class="fa-solid fa-scale-balanced text-3xl text-line mb-3"></i><p>Select a sample case and click Resolve to see the agents in action.</p></div></div>
 </section>
+
 <div id="notice" role="status" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-ink text-surface px-5 py-3 rounded-xl shadow-lg text-xs max-w-[90vw] z-50"></div>
 </main></div></div>
+
 <script>
-let method='sample', replayTimers=[];
+let method='sample', cases=[], selectedCase=null, resolveData=null, replayTimers=[], noticeTimer;
+
+// ============ STATE ============
 function showState(state){['landing','active'].forEach(s=>{document.getElementById(s).classList.toggle('hidden',s!==state);document.getElementById(s+'-tab').setAttribute('aria-selected',String(s===state))})}
 function setMethod(value){method=value;['sample','custom'].forEach(s=>{document.getElementById(s+'-form').classList.toggle('hidden',s!==value);document.getElementById(s+'-label').classList.toggle('bg-surface',s===value);document.getElementById(s+'-label').classList.toggle('shadow-sm',s===value);document.getElementById(s+'-label').classList.toggle('text-muted',s!==value)})}
-function changeCase(value){document.getElementById('case-summary').textContent=value==='route'?'Rider reports an unnecessary detour and requests a refund of the extra fare.':'Rider disputes a no-show charge. This design preview includes the route-deviation resolution only.'}
-let noticeTimer;function notify(text){const n=document.getElementById('notice');n.textContent=text;n.classList.remove('hidden');clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>n.classList.add('hidden'),5500)}
-function resolveCase(){if(method==='custom'){if(!document.getElementById('custom-form').reportValidity())return;notify('Custom dispute captured for preview only. Showing the illustrative route-deviation case.')}else if(document.getElementById('case').value==='no-show'){notify('No-show selected. This static draft demonstrates the route-deviation outcome.')}showState('active');replayFeed()}
-function replayFeed(){replayTimers.forEach(clearTimeout);replayTimers=[];const items=[...document.querySelectorAll('.feed-item')];items.forEach(el=>el.style.display='none');document.getElementById('feed-state').textContent='Replaying recorded agent activity…';document.getElementById('replay').disabled=true;items.forEach((el,i)=>{replayTimers.push(setTimeout(()=>{el.style.display='';if(i===items.length-1){document.getElementById('feed-state').textContent='Resolution complete';document.getElementById('replay').disabled=false}},i*650))})}
+
+// ============ TOAST ============
+function notify(text){const n=document.getElementById('notice');n.textContent=text;n.classList.remove('hidden');clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>n.classList.add('hidden'),5500)}
+
+// ============ LOAD CASES ============
+async function loadCases(){
+  try{
+    const res=await fetch('/api/cases');
+    const data=await res.json();
+    cases=data.cases||[];
+    const sel=document.getElementById('case');
+    sel.innerHTML='<option value="">— Select a case —</option>'+cases.map(c=>`<option value="${c.file}">${c.dispute_id} · ${c.label}</option>`).join('');
+    if(cases.length>0){sel.selectedIndex=1;changeCase(cases[0].file)}
+  }catch(e){document.getElementById('case').innerHTML='<option value="">Failed to load cases</option>'}
+}
+
+function changeCase(file){
+  selectedCase=cases.find(c=>c.file===file);
+  if(!selectedCase)return;
+  document.getElementById('case-summary').textContent=selectedCase.summary;
+  const rc=document.getElementById('case-route');
+  const hasRoute=selectedCase.route&&selectedCase.route.includes('->');
+  if(hasRoute){
+    rc.classList.remove('hidden');
+    const parts=selectedCase.route.split('->').map(s=>s.trim());
+    document.getElementById('case-pickup').textContent=parts[0]||'';
+    document.getElementById('case-dropoff').textContent=parts[1]||'';
+  }else{rc.classList.add('hidden')}
+}
+
+// ============ RESOLVE ============
+async function resolveCase(){
+  if(method==='custom'){if(!document.getElementById('custom-form').reportValidity())return;notify('Custom dispute filing is not available in demo mode. Please select a sample case.');return}
+  if(!selectedCase){notify('Please select a sample case first.');return}
+  const btn=document.getElementById('resolve-btn');
+  const orig=btn.innerHTML;
+  btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin text-[11px]"></i> Resolving...';
+  document.getElementById('active-content').innerHTML='<div class="panel p-12 text-center text-muted text-sm"><i class="fa-solid fa-spinner fa-spin text-3xl text-primary mb-3"></i><p>Running agent pipeline...</p></div>';
+  showState('active');
+  try{
+    const res=await fetch('/api/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:selectedCase.file})});
+    if(!res.ok){const err=await res.json();throw new Error(err.error||'Resolution failed')}
+    resolveData=await res.json();
+    buildActiveView(resolveData);
+  }catch(e){
+    document.getElementById('active-content').innerHTML=`<div class="panel p-12 text-center text-[#c43d3c] text-sm"><i class="fa-solid fa-triangle-exclamation text-3xl mb-3"></i><p>${e.message}</p></div>`;
+  }finally{btn.disabled=false;btn.innerHTML=orig}
+}
+
+// ============ BUILD ACTIVE VIEW ============
+function buildActiveView(d){
+  const c=d.case, ev=d.evidence;
+  const isNoShow=c.dispute_type==='no_show';
+  const typeLabel=isNoShow?'No-show charge':'Route deviation';
+  const icon=isNoShow?'fa-user-clock':'fa-route';
+  const filed=c.filed_at?new Date(c.filed_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+
+  let html=`
+  <!-- Case header -->
+  <div class="panel px-5 py-4 mb-4 flex flex-wrap justify-between items-center gap-4">
+    <div class="flex items-center gap-3">
+      <div class="mini bg-primary/10 text-primary"><i class="fa-solid ${icon} text-sm"></i></div>
+      <div>
+        <h2 class="font-display font-bold text-sm">${typeLabel} <span class="text-muted font-normal ml-2 text-xs">#${c.dispute_id}</span></h2>
+        <p class="text-[11px] text-muted mt-1">${c.pickup_address} <i class="fa-solid fa-arrow-right text-[8px] mx-1"></i> ${c.dropoff_address} ${filed?`<span class="mx-1">&middot;</span> ${filed}`:''}</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="tag bg-canvas text-muted">Sample case</span>
+      <span class="tag bg-success/10 text-success"><i class="fa-solid fa-circle-check"></i>Resolved</span>
+    </div>
+  </div>
+  <!-- Pipeline -->
+  <div class="panel flex items-center justify-between px-5 py-3 mb-5 gap-3 text-[11px]">
+    <div class="flex items-center gap-2"><span class="mini !h-6 !w-6 rounded-full bg-success/10 text-success"><i class="fa-solid fa-check text-[9px]"></i></span><span class="font-medium">Evidence gathering</span></div>
+    <div class="h-px bg-line flex-1"></div>
+    <div class="flex items-center gap-2"><span class="mini !h-6 !w-6 rounded-full bg-success/10 text-success"><i class="fa-solid fa-check text-[9px]"></i></span><span class="font-medium">Rebuttals</span></div>
+    <div class="h-px bg-line flex-1"></div>
+    <div class="flex items-center gap-2"><span class="mini !h-6 !w-6 rounded-full bg-primary text-white"><i class="fa-solid fa-gavel text-[9px]"></i></span><span class="font-semibold text-primary">Final ruling</span></div>
+  </div>`;
+
+  html+=buildEvidenceRoom(d);
+  html+=buildConversationAndRuling(d);
+  html+='<p class="text-center text-[9px] text-muted mt-5"><i class="fa-solid fa-flask mr-1"></i>Demo workspace &middot; All trip data, policies, and outcomes shown are illustrative. No financial action is taken.</p>';
+
+  document.getElementById('active-content').innerHTML=html;
+  if(window.lucide)lucide.createIcons();
+  replayFeed();
+}
+
+// ============ EVIDENCE ROOM ============
+function buildEvidenceRoom(d){
+  const c=d.case, ev=d.evidence, r=ev.route||{}, ch=ev.chat||{}, f=ev.fare||{}, routes=ev.routes||{};
+  const isNoShow=c.dispute_type==='no_show';
+  const cur=f.currency||'SGD';
+  const cs=cur==='SGD'?'S$':cur+' ';
+
+  let mapHTML=buildRouteSVG(routes, c, r);
+
+  // Trip analysis
+  let analysisHTML;
+  if(isNoShow){
+    const wait=c.driver_wait_time_min||0;
+    const dist=c.rider_distance_from_pickup_m;
+    analysisHTML=`
+    <div class="px-1"><div class="label mb-3">Pickup analysis</div>
+      <div class="grid grid-cols-2 gap-2 pb-4 border-b border-line">
+        <div><p class="text-[10px] text-muted">Driver wait</p><p class="text-lg font-display font-bold mt-1">${wait} <span class="text-[10px] font-normal text-muted">min</span></p><p class="text-[10px] text-muted mt-2">Required</p><p class="text-sm font-bold mt-1">5 min</p></div>
+        <div><p class="text-[10px] text-muted">Rider distance</p><p class="text-lg font-display font-bold mt-1 ${dist<=50?'text-success':'text-driver'}">${dist} <span class="text-[10px] font-normal text-muted">m</span></p><p class="text-[10px] text-muted mt-2">Threshold</p><p class="text-sm font-bold mt-1">50 m</p></div>
+      </div>
+      ${buildFareBox(f,cs,c)}
+    </div>`;
+  }else{
+    const optKm=(r.optimal_distance_km||c.estimated_distance_km||0).toFixed(1);
+    const actKm=(r.actual_distance_km||c.actual_distance_km||0).toFixed(1);
+    const dev=(r.extra_distance_pct||0).toFixed(0);
+    const extraMin=Math.abs(r.time_difference_min||0);
+    const optTraffic=r.traffic_optimal_congestion||'unknown';
+    const actTraffic=r.traffic_actual_congestion||'unknown';
+    analysisHTML=`
+    <div class="px-1"><div class="label mb-3">Trip &amp; route analysis</div>
+      <div class="grid grid-cols-3 gap-2 pb-4 border-b border-line">
+        <div><p class="text-[10px] text-muted">Est. distance</p><p class="text-lg font-display font-bold mt-1">${optKm} <span class="text-[10px] font-normal text-muted">km</span></p><p class="text-[10px] text-muted mt-2">Opt. route traffic</p>${trafficTag(optTraffic)}</div>
+        <div><p class="text-[10px] text-muted">Actual distance</p><p class="text-lg font-display font-bold mt-1">${actKm} <span class="text-[10px] font-normal text-muted">km</span></p><p class="text-[10px] text-muted mt-2">Act. route traffic</p>${trafficTag(actTraffic)}</div>
+        <div><p class="text-[10px] text-muted">Deviation</p><p class="text-lg font-display font-bold text-driver mt-1">${dev}<span class="text-xs">%</span></p><p class="text-[10px] text-muted mt-2">Extra time</p><p class="text-lg font-display font-bold mt-1">${extraMin} <span class="text-[10px] font-normal text-muted">min</span></p></div>
+      </div>
+      ${buildFareBox(f,cs,c)}
+    </div>`;
+  }
+
+  // Chat highlights
+  let chatHTML='<div class="lg:border-l border-line lg:pl-4"><div class="label mb-3">Chat highlights</div>';
+  const keyExchanges=ch.key_exchanges||[];
+  if(keyExchanges.length>0){
+    keyExchanges.slice(0,3).forEach(ex=>{
+      const sender=(ex.sender||'').toLowerCase();
+      const cls=sender==='rider'?'rider':'driver';
+      const sentiment=ex.sentiment||'neutral';
+      const time=ex.timestamp?new Date(ex.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+      chatHTML+=`<div class="bg-${cls}/5 border-l-2 border-${cls}/50 pl-2.5 py-1.5 mb-2"><div class="flex justify-between text-[9px]"><b class="text-${cls}">${sender.charAt(0).toUpperCase()+sender.slice(1)}</b><span class="text-muted">${sentiment} &middot; ${time}</span></div><p class="text-[10px] leading-4 mt-1">${escHtml(ex.message||ex.text||'')}</p></div>`;
+    });
+  }else{
+    // Fallback to raw messages
+    const msgs=ch.messages||[];
+    const riderMsgs=msgs.filter(m=>m.sender==='rider').slice(0,2);
+    const driverMsgs=msgs.filter(m=>m.sender==='driver').slice(0,2);
+    [...riderMsgs,...driverMsgs].slice(0,3).forEach(m=>{
+      const cls=m.sender==='rider'?'rider':'driver';
+      chatHTML+=`<div class="bg-${cls}/5 border-l-2 border-${cls}/50 pl-2.5 py-1.5 mb-2"><div class="flex justify-between text-[9px]"><b class="text-${cls}">${m.sender.charAt(0).toUpperCase()+m.sender.slice(1)}</b></div><p class="text-[10px] leading-4 mt-1">${escHtml(m.message||'')}</p></div>`;
+    });
+  }
+  // Party profiles
+  chatHTML+=`<div class="border-t border-line mt-3 pt-3 flex gap-4"><div class="flex gap-2"><div class="mini !w-7 !h-7 bg-rider/10 text-rider text-[10px]">${getInitials(c.rider_name)}</div><div class="text-[10px]"><b class="font-medium">${escHtml(c.rider_name)}</b><p class="text-muted text-[9px]">Rider &middot; ${c.rider_id}</p></div></div><div class="flex gap-2"><div class="mini !w-7 !h-7 bg-driver/10 text-driver text-[10px]">${getInitials(c.driver_name)}</div><div class="text-[10px]"><b class="font-medium">${escHtml(c.driver_name)}</b><p class="text-muted text-[9px]">Driver &middot; ${c.driver_id}</p></div></div></div></div>`;
+
+  const sourceCount=6;
+  return `
+  <details open class="panel mb-5">
+    <summary class="px-5 py-4 flex justify-between items-center border-b border-line">
+      <span class="flex gap-2.5 items-center font-display font-bold text-sm"><i class="fa-solid fa-layer-group text-muted text-xs"></i>Evidence room<span class="tag bg-canvas text-muted ml-1">${sourceCount} sources</span></span>
+      <span class="text-[10px] text-muted flex items-center gap-3">Trip #${c.ride_id}<i class="fa-solid fa-chevron-down chevron"></i></span>
+    </summary>
+    <div class="p-4 grid lg:grid-cols-[1.05fr_1fr_.86fr] gap-4">
+      <div>${mapHTML}<div class="flex items-center justify-between mt-3 text-[10px] text-muted">${isNoShow?'':`<span><span class="inline-block w-4 h-[3px] bg-primary mr-1 align-middle"></span>Actual route</span><span><span class="inline-block w-4 border-t-2 border-dashed border-[#b0a3d9] mr-1 align-middle"></span>Optimal route</span>${r.extra_distance_pct?`<span class="text-driver font-semibold">+${r.extra_distance_pct.toFixed(0)}% detour</span>`:''}`}</div></div>
+      ${analysisHTML}
+      ${chatHTML}
+    </div>
+  </details>`;
+}
+
+function buildFareBox(f,cs,c){
+  const total=(f.total||0).toFixed(2);
+  const overcharge=f.overcharge_amount||0;
+  const isNoShow=c.dispute_type==='no_show';
+  const overchargeLabel=isNoShow?'Cancellation fee':'Disputed overcharge';
+  let rows=`<span>Base fare</span><span class="text-right">${cs}${(f.base_fare||0).toFixed(2)}</span>`;
+  if(!isNoShow){
+    rows+=`<span>Distance &middot; Time</span><span class="text-right">${cs}${(f.distance_charge||0).toFixed(2)} &middot; ${(f.time_charge||0).toFixed(2)}</span>`;
+  }
+  if(f.surge_charge&&f.surge_charge>0){rows+=`<span>Surge (${(f.surge_multiplier||1).toFixed(1)}x)</span><span class="text-right">${cs}${f.surge_charge.toFixed(2)}</span>`}
+  if(f.cancellation_fee&&f.cancellation_fee>0){rows+=`<span>Cancellation fee</span><span class="text-right">${cs}${f.cancellation_fee.toFixed(2)}</span>`}
+  if(overcharge>0){rows+=`<span class="text-driver">${overchargeLabel}</span><span class="text-right text-driver font-medium">${cs}${overcharge.toFixed(2)}</span>`}
+  return `<div class="bg-canvas rounded-lg p-3"><div class="flex justify-between text-xs font-semibold mb-2"><span>Fare breakdown</span><span>${cs}${total}</span></div><div class="grid grid-cols-2 gap-y-1.5 text-[10px] text-muted">${rows}</div></div>`;
+}
+
+function trafficTag(level){
+  const map={'light':['#1D9E75','rgba(29,158,117,0.12)'],'moderate':['#c78a1c','rgba(239,159,39,0.12)'],'heavy':['#c43d3c','rgba(226,75,74,0.12)']};
+  const [color,bg]=map[(level||'').toLowerCase()]||map['moderate'];
+  return `<span class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold mt-1" style="background:${bg};color:${color};">${level||'Unknown'}</span>`;
+}
+
+// ============ ROUTE SVG ============
+function buildRouteSVG(routes, c, r){
+  const W=420,H=240;
+  const isNoShow=c.dispute_type==='no_show';
+
+  if(isNoShow){
+    // For no-show: show pickup area with driver/rider GPS
+    const driverGps=routes.driver_gps_at_pickup||[];
+    const riderGps=routes.rider_gps_at_pickup||[];
+    if(driverGps.length===0&&riderGps.length===0){
+      return `<div class="map h-[196px] rounded-lg overflow-hidden relative bg-[#edf0eb] border border-line flex items-center justify-center"><span class="text-[10px] text-muted">Pickup location map</span></div>`;
+    }
+    const pts=[...driverGps,...riderGps];
+    const lats=pts.map(p=>p.lat),lngs=pts.map(p=>p.lng);
+    const [minLat,maxLat,minLng,maxLng]=bbox(lats,lngs);
+    const [px,py]=project(driverGps[0]||riderGps[0],minLat,maxLat,minLng,maxLng,W,H);
+    const [rx,ry]=riderGps.length>0?project(riderGps[0],minLat,maxLat,minLng,maxLng,W,H):[px,py];
+    const dist=Math.hypot(px-rx,py-ry);
+    return `<div class="map h-[196px] rounded-lg overflow-hidden relative bg-[#edf0eb] border border-line">
+      <svg viewBox="0 0 ${W} ${H}" class="w-full h-full" preserveAspectRatio="xMidYMid slice">
+        <rect width="${W}" height="${H}" fill="#eef0eb" class="dark:fill-[#1a1e28]"/>
+        <g fill="#e0e7d9" class="dark:fill-[#2a3040]"><path d="M30 20h70v45H30zM190 15h55v58h-55zM210 157h48v59h-48zM52 164h64v60H52z"/></g>
+        <g fill="none" stroke="#fff" stroke-width="9" class="dark:stroke-[#3a4050]"><path d="M-20 85L440 188M-10 140L360 240M78-10L8 250M255-10L178 260"/></g>
+        ${dist>3?`<path d="M${px} ${py} L${rx} ${ry}" fill="none" stroke="#c77538" stroke-width="3" stroke-dasharray="4 3"/>`:''}
+        <circle cx="${px}" cy="${py}" r="8" fill="#c77538" stroke="white" stroke-width="3"/>
+        <circle cx="${rx}" cy="${ry}" r="8" fill="#378ADD" stroke="white" stroke-width="3"/>
+        <rect x="${px+10}" y="${py-20}" width="80" height="20" rx="5" fill="white" class="dark:fill-[#202631]"/>
+        <text x="${px+14}" y="${py-6}" font-size="9" font-family="DM Sans,sans-serif" fill="#3c4250" class="dark:fill-[#e8ebf2]">Driver</text>
+        <rect x="${rx+10}" y="${ry-20}" width="70" height="20" rx="5" fill="white" class="dark:fill-[#202631]"/>
+        <text x="${rx+14}" y="${ry-6}" font-size="9" font-family="DM Sans,sans-serif" fill="#3c4250" class="dark:fill-[#e8ebf2]">Rider</text>
+      </svg>
+      <span class="absolute left-2 bottom-2 bg-white/90 rounded px-1.5 py-1 text-[8px] text-[#7c8390] dark:bg-[#202631]/90 dark:text-[#a2aabb]">PICKUP AREA</span>
+    </div>`;
+  }
+
+  // Route deviation: show optimal vs actual route
+  const optimal=routes.optimal||[];
+  const actual=routes.actual||[];
+  if(optimal.length===0&&actual.length===0){
+    return `<div class="map h-[196px] rounded-lg overflow-hidden relative bg-[#edf0eb] border border-line flex items-center justify-center"><span class="text-[10px] text-muted">No route data</span></div>`;
+  }
+  const all=[...optimal,...actual];
+  const lats=all.map(p=>p.lat),lngs=all.map(p=>p.lng);
+  const [minLat,maxLat,minLng,maxLng]=bbox(lats,lngs);
+  const optPath=buildSVGPath(optimal,minLat,maxLat,minLng,maxLng,W,H);
+  const actPath=buildSVGPath(actual,minLat,maxLat,minLng,maxLng,W,H);
+  const [sx,sy]=project(optimal[0],minLat,maxLat,minLng,maxLng,W,H);
+  const [ex,ey]=project(optimal[optimal.length-1],minLat,maxLat,minLng,maxLng,W,H);
+  const pickupLabel=c.pickup_address?c.pickup_address.split(',')[0].slice(0,18):'Pickup';
+  const dropoffLabel=c.dropoff_address?c.dropoff_address.split(',')[0].slice(0,18):'Dropoff';
+  return `<div class="map h-[196px] rounded-lg overflow-hidden relative bg-[#edf0eb] border border-line">
+    <svg viewBox="0 0 ${W} ${H}" class="w-full h-full" preserveAspectRatio="xMidYMid slice">
+      <rect width="${W}" height="${H}" fill="#eef0eb" class="dark:fill-[#1a1e28]"/>
+      <g fill="#e0e7d9" class="dark:fill-[#2a3040]"><path d="M30 20h70v45H30zM190 15h55v58h-55zM210 157h48v59h-48zM52 164h64v60H52z"/></g>
+      <g fill="none" stroke="#fff" stroke-width="9" class="dark:stroke-[#3a4050]"><path d="M-20 85L440 188M-10 140L360 240M78-10L8 250M158-20L81 260M255-10L178 260M323-10L249 260M-10 19L350 104"/></g>
+      <g fill="none" stroke="#d9dfd6" stroke-width="1"><path d="M-20 85L440 188M-10 140L360 240M78-10L8 250M158-20L81 260M255-10L178 260M323-10L249 260"/></g>
+      <path d="${optPath}" fill="none" stroke="#b0a3d9" stroke-width="4" stroke-dasharray="6 4"/>
+      <path d="${actPath}" fill="none" stroke="#6653ca" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${sx}" cy="${sy}" r="7" fill="#6653ca" stroke="white" stroke-width="3"/>
+      <circle cx="${ex}" cy="${ey}" r="7" fill="#fff" stroke="#6653ca" stroke-width="3" class="dark:fill-[#202631]"/>
+      <rect x="${sx+10}" y="${sy-20}" width="${pickupLabel.length*5+10}" height="20" rx="5" fill="white" class="dark:fill-[#202631]"/>
+      <text x="${sx+14}" y="${sy-6}" font-size="9" font-family="DM Sans,sans-serif" fill="#3c4250" class="dark:fill-[#e8ebf2]">${escHtml(pickupLabel)}</text>
+      <rect x="${ex-Math.max(dropoffLabel.length*5+10,70)}" y="${ey}" width="${dropoffLabel.length*5+10}" height="20" rx="5" fill="white" class="dark:fill-[#202631]"/>
+      <text x="${ex-Math.max(dropoffLabel.length*5+10,70)+4}" y="${ey+14}" font-size="9" font-family="DM Sans,sans-serif" fill="#3c4250" class="dark:fill-[#e8ebf2]">${escHtml(dropoffLabel)}</text>
+    </svg>
+    <span class="absolute left-2 bottom-2 bg-white/90 rounded px-1.5 py-1 text-[8px] text-[#7c8390] dark:bg-[#202631]/90 dark:text-[#a2aabb]">SCHEMATIC &middot; GPS PROJECTED</span>
+  </div>`;
+}
+
+function bbox(lats,lngs){
+  const minLat=Math.min(...lats),maxLat=Math.max(...lats);
+  const minLng=Math.min(...lngs),maxLng=Math.max(...lngs);
+  const padLat=(maxLat-minLat)*0.15||0.001,padLng=(maxLng-minLng)*0.15||0.001;
+  return [minLat-padLat,maxLat+padLat,minLng-padLng,maxLng+padLng];
+}
+function project(p,minLat,maxLat,minLng,maxLng,W,H){
+  const x=((p.lng-minLng)/(maxLng-minLng))*W;
+  const y=H-((p.lat-minLat)/(maxLat-minLat))*H;
+  return [x,y];
+}
+function buildSVGPath(pts,minLat,maxLat,minLng,maxLng,W,H){
+  return pts.map((p,i)=>{const[x,y]=project(p,minLat,maxLat,minLng,maxLng,W,H);return`${i===0?'M':'L'}${x.toFixed(1)} ${y.toFixed(1)}`}).join(' ');
+}
+
+// ============ CONVERSATION + RULING ============
+function buildConversationAndRuling(d){
+  const msgs=d.messages||[], ruling=d.ruling||{};
+  const rulingData=parseRulingMeta(msgs);
+  const isRefund=ruling.ruling==='refund'||rulingData.ruling==='refund';
+  const amount=ruling.amount||rulingData.amount||0;
+  const conf=Math.round((ruling.confidence||rulingData.confidence||0)*100);
+  const confLabel=conf>=85?'High':conf>=65?'Medium':'Low';
+  const ra=d.rider_argument||{}, da=d.driver_argument||{}, rrb=d.rider_rebuttal||{}, drb=d.driver_rebuttal||{};
+  const cur='S$';
+
+  let feedHTML='<div id="feed" class="p-5 space-y-4">';
+  msgs.forEach((m,i)=>{
+    const ts=m.timestamp?new Date(m.timestamp).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
+    const sender=m.sender, type=m.msg_type;
+    feedHTML+=buildMessageHTML(sender,type,m.content,m.metadata||{},ts);
+  });
+  feedHTML+='</div>';
+
+  const rulingTitle=isRefund?'Refund approved':'No action required';
+  const rulingSub=isRefund?`Return ${cur}${amount.toFixed(2)} to the rider.`:'No refund issued.';
+  const policyHTML=(ruling.policy_applied||[]).map(p=>`<div class="text-[10px] flex justify-between py-1"><span>&sect; ${p.clause} &middot; ${escHtml(p.title)}</span><i class="fa-solid fa-check text-success"></i></div>`).join('');
+
+  return `
+  <div class="grid xl:grid-cols-[1.06fr_1fr] gap-5 items-start">
+    <!-- Agent conversation -->
+    <section class="panel overflow-hidden">
+      <div class="flex justify-between items-center px-5 py-4 border-b border-line">
+        <h3 class="font-display font-bold text-sm"><i class="fa-regular fa-comments text-muted mr-2"></i>Agent conversation</h3>
+        <button id="replay" onclick="replayFeed()" class="text-[10px] text-muted hover:text-primary"><i class="fa-solid fa-rotate-right mr-1"></i>Replay</button>
+      </div>
+      <div class="px-5 py-3 bg-canvas/50 flex gap-4 text-[9px] border-b border-line"><span class="text-rider">&bull; Rider Advocate</span><span class="text-driver">&bull; Driver Advocate</span><span class="text-judge">&bull; Judge</span></div>
+      ${feedHTML}
+      <div class="px-5 py-3 border-t border-line flex justify-between text-[9px] text-muted"><span><i class="fa-solid fa-circle-check text-success mr-1"></i><span id="feed-state">Resolution complete</span></span><span>${msgs.length} messages &middot; 3 agents &middot; Demo</span></div>
+    </section>
+
+    <div class="space-y-4">
+      <!-- Ruling -->
+      <section class="panel overflow-hidden !border-success/30">
+        <div class="px-5 py-4 bg-[#eaf6f0] soft-light border-b border-success/20">
+          <div class="flex justify-between items-center"><span class="text-[10px] font-bold ${isRefund?'text-success':'text-muted'} tracking-[.12em]"><i class="fa-solid ${isRefund?'fa-circle-check':'fa-circle-info'} mr-1"></i> FINAL RULING</span><span class="text-[9px] ${isRefund?'text-success':'text-muted'} border border-${isRefund?'success':'line'}/20 rounded px-2 py-1">Judge verified</span></div>
+          <div class="flex justify-between items-end mt-3"><div><h3 class="font-display text-xl font-extrabold ${isRefund?'text-[#167656] dark:text-success':'text-muted'}">${rulingTitle}</h3><p class="text-[11px] text-[#578773] mt-1">${rulingSub}</p></div>${isRefund?`<div class="text-[30px] font-display font-extrabold text-[#167656] dark:text-success tracking-[-1px]"><span class="text-sm font-medium mr-1">${cur}</span>${amount.toFixed(2)}</div>`:''}</div>
+        </div>
+        <div class="p-5">
+          <div class="flex justify-between text-[11px] mb-2"><span class="font-medium">Decision confidence <i class="fa-regular fa-circle-question text-muted ml-1" title="Illustrative judge confidence"></i></span><span class="font-bold ${isRefund?'text-success':'text-muted'}">${conf}% <span class="font-normal text-muted ml-1">${confLabel}</span></span></div>
+          <div role="meter" aria-label="Decision confidence" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${conf}" class="h-1.5 rounded-full ${isRefund?'bg-success/10':'bg-muted/10'}"><div class="w-[${conf}%] h-full rounded-full ${isRefund?'bg-success':'bg-muted'}"></div></div>
+          <div class="grid sm:grid-cols-2 gap-4 mt-5">
+            <div><div class="text-[10px] font-semibold text-rider mb-2"><i class="fa-regular fa-user mr-1"></i>For the rider</div><p class="text-[11px] leading-[1.8] text-muted">${escHtml(ruling.reasoning_for_rider||'')}</p></div>
+            <div class="sm:border-l border-line sm:pl-4"><div class="text-[10px] font-semibold text-driver mb-2"><i class="fa-solid fa-car mr-1"></i>For the driver</div><p class="text-[11px] leading-[1.8] text-muted">${escHtml(ruling.reasoning_for_driver||'')}</p></div>
+          </div>
+          ${policyHTML?`<div class="border-t border-line mt-4 pt-4"><div class="label mb-2">Policy applied</div>${policyHTML}</div>`:''}
+          ${ruling.verification_notes?`<div class="rounded-md bg-canvas p-2.5 flex gap-2 mt-3 text-[9px] text-muted leading-4"><i class="fa-solid fa-shield-halved mt-0.5 text-success"></i>${escHtml(ruling.verification_notes)}</div>`:''}
+        </div>
+      </section>
+
+      <!-- Advocate cases -->
+      <section class="panel p-4">
+        <div class="flex items-center justify-between mb-3"><h3 class="font-display text-sm font-bold">Advocate cases</h3><i class="fa-solid fa-scale-balanced text-muted text-xs"></i></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <div class="text-[10px] font-bold text-rider mb-2">Rider Advocate</div>
+            <p class="text-[11px] font-medium">${escHtml(ra.claim||'')}</p>
+            <p class="text-[10px] text-muted mt-1">${capitalize(ra.requested_remedy||'no_action')} <b class="text-ink">${cur}${(ra.requested_amount||0).toFixed(2)}</b></p>
+            <div class="flex gap-1 mt-2"><span class="tag bg-rider/5 text-rider !text-[8px]">${(ra.evidence||[]).length} evidence items</span><span class="tag bg-canvas text-muted !text-[8px]">${(ra.policy_cited||[]).map(p=>'&sect;'+p.clause).join(', ')||'None'}</span></div>
+            ${rrb.counterpoints&&rrb.counterpoints.length?`<details class="mt-3 text-[10px]"><summary class="text-muted">View rebuttal <i class="fa-solid fa-chevron-down text-[8px] ml-1 chevron"></i></summary><ul class="leading-5 mt-2 space-y-1">${rrb.counterpoints.map(c=>`<li>&bull; ${escHtml(c)}</li>`).join('')}</ul></details>`:`<details class="mt-3 text-[10px]"><summary class="text-muted">View argument <i class="fa-solid fa-chevron-down text-[8px] ml-1 chevron"></i></summary><p class="leading-5 mt-2">${escHtml(ra.reasoning||'')}</p></details>`}
+          </div>
+          <div class="border-l border-line pl-4">
+            <div class="text-[10px] font-bold text-driver mb-2">Driver Advocate</div>
+            <p class="text-[11px] font-medium">${escHtml(da.claim||'')}</p>
+            <p class="text-[10px] text-muted mt-1">${capitalize(da.requested_remedy||'no_action')} <b class="text-ink">${cur}${(da.requested_amount||0).toFixed(2)}</b></p>
+            <div class="flex gap-1 mt-2"><span class="tag bg-driver/5 text-driver !text-[8px]">${(da.evidence||[]).length} evidence items</span><span class="tag bg-canvas text-muted !text-[8px]">${(da.policy_cited||[]).map(p=>'&sect;'+p.clause).join(', ')||'None'}</span></div>
+            ${drb.counterpoints&&drb.counterpoints.length?`<details class="mt-3 text-[10px]"><summary class="text-muted">View rebuttal <i class="fa-solid fa-chevron-down text-[8px] ml-1 chevron"></i></summary><ul class="leading-5 mt-2 space-y-1">${drb.counterpoints.map(c=>`<li>&bull; ${escHtml(c)}</li>`).join('')}</ul></details>`:`<details class="mt-3 text-[10px]"><summary class="text-muted">View argument <i class="fa-solid fa-chevron-down text-[8px] ml-1 chevron"></i></summary><p class="leading-5 mt-2">${escHtml(da.reasoning||'')}</p></details>`}
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>`;
+}
+
+// ============ MESSAGE BUILDER ============
+function buildMessageHTML(sender,type,content,meta,ts){
+  const senderMap={'rider_advocate':['rider','Rider Advocate','fa-regular fa-user'],'driver_advocate':['driver','Driver Advocate','fa-solid fa-car'],'judge':['judge','Judge','fa-solid fa-scale-balanced'],'system':['','System','fa-solid fa-gear']};
+  const[cls,name,icon]=senderMap[sender]||['','',icon];
+
+  if(sender==='system'){
+    return `<div class="feed-item flex items-center gap-2 text-[9px] text-muted"><span class="font-mono">${ts}</span><span class="tag !py-0 bg-canvas">SYS</span><span>${escHtml(content)}</span></div>`;
+  }
+
+  const typeLabel={'tool_call':'TOOL','tool_result':'RESULT','reasoning':'THINK','argument':'ARGUMENT','rebuttal':'REBUTTAL','ruling':'RULING'}[type]||type.toUpperCase();
+  const typeCls={'tool_call':'text-muted','tool_result':'text-muted','reasoning':'text-muted','argument':'text-'+cls,'rebuttal':'text-'+cls,'ruling':'text-'+cls'}[type]||'text-muted';
+
+  // Tool call
+  if(type==='tool_call'){
+    return `<div class="feed-item"><div class="flex gap-2 items-center text-[10px]"><span class="mini !w-6 !h-6 bg-${cls}/10 text-${cls}"><i class="${icon}"></i></span><b class="text-${cls}">${name}</b><span class="text-[8px] text-muted bg-canvas rounded px-1">${typeLabel}</span><span class="ml-auto font-mono text-[9px] text-muted">${ts}</span></div><p class="ml-8 mt-1 text-[11px] font-mono text-muted">${escHtml(content)}</p></div>`;
+  }
+  // Tool result (collapsible)
+  if(type==='tool_result'){
+    const toolName=meta.tool||'';
+    const display=content.length>500?content.slice(0,500)+'...':content;
+    return `<div class="feed-item"><div class="flex gap-2 items-center text-[10px]"><span class="mini !w-6 !h-6 bg-${cls}/10 text-${cls}"><i class="${icon}"></i></span><b class="text-${cls}">${name}</b><span class="text-[8px] text-muted bg-canvas rounded px-1">${typeLabel}</span><span class="ml-auto font-mono text-[9px] text-muted">${ts}</span></div><details class="ml-8 mt-2 rounded-md border border-line"><summary class="px-2 py-1.5 text-[9px] text-muted flex items-center gap-2"><i class="fa-solid fa-code"></i>RESULT &middot; ${escHtml(toolName)}()<i class="fa-solid fa-chevron-down ml-auto chevron"></i></summary><pre class="p-3 text-[10px] overflow-auto bg-canvas">${escHtml(display)}</pre></details></div>`;
+  }
+  // Reasoning
+  if(type==='reasoning'){
+    return `<div class="feed-item"><div class="flex gap-2 items-center text-[10px]"><span class="mini !w-6 !h-6 bg-${cls}/10 text-${cls}"><i class="${icon}"></i></span><b class="text-${cls}">${name}</b><span class="text-[8px] text-muted bg-canvas rounded px-1">${typeLabel}</span><span class="ml-auto font-mono text-[9px] text-muted">${ts}</span></div><p class="ml-8 mt-1 text-[11px] italic text-muted leading-5">${escHtml(content)}</p></div>`;
+  }
+  // Argument / Rebuttal (colored card)
+  if(type==='argument'||type==='rebuttal'){
+    let body=escHtml(content);
+    // Try to parse JSON content for structured display
+    try{const j=JSON.parse(content);if(j.claim){body=escHtml(j.claim)+(j.amount?` <b>${cur()}${j.amount.toFixed(2)}</b>`:'')+(j.remedy?` &middot; ${capitalize(j.remedy)}`:'')}}catch(e){}
+    return `<div class="feed-item border-l-2 border-${cls} bg-${cls}/5 rounded-r-lg p-3"><div class="flex justify-between items-center text-[10px]"><b class="text-${cls}">${name} <span class="font-normal text-[8px] ml-2 tracking-wide">${typeLabel}</span></b><span class="font-mono text-[9px] text-muted">${ts}</span></div><p class="text-[11px] leading-5 mt-1">${body}</p></div>`;
+  }
+  // Ruling
+  if(type==='ruling'){
+    let body=escHtml(content);
+    try{const j=JSON.parse(content);if(j.ruling){body=`${capitalize(j.ruling)}: ${escHtml(j.action||'')}`+(j.amount!=null?` &middot; <b>${cur()}${j.amount.toFixed(2)}</b>`:'')+(j.confidence!=null?` &middot; ${Math.round(j.confidence*100)}% confidence`:'')}}catch(e){}
+    return `<div class="feed-item"><div class="flex gap-2 items-center text-[10px]"><span class="mini !w-6 !h-6 bg-${cls}/10 text-${cls}"><i class="${icon}"></i></span><b class="text-${cls}">${name}</b><span class="text-[8px] ${typeCls} bg-${cls}/10 rounded px-1">${typeLabel}</span><span class="ml-auto font-mono text-[9px] text-muted">${ts}</span></div><p class="ml-8 mt-1 text-[11px] leading-5">${body}</p></div>`;
+  }
+  // Default
+  return `<div class="feed-item"><div class="flex gap-2 items-center text-[10px]"><span class="mini !w-6 !h-6 bg-${cls}/10 text-${cls}"><i class="${icon}"></i></span><b class="text-${cls}">${name}</b><span class="ml-auto font-mono text-[9px] text-muted">${ts}</span></div><p class="ml-8 mt-1 text-[11px]">${escHtml(content)}</p></div>`;
+}
+
+function parseRulingMeta(msgs){
+  for(let i=msgs.length-1;i>=0;i--){if(msgs[i].msg_type==='ruling'&&msgs[i].metadata)return msgs[i].metadata}
+  return{};
+}
+
+// ============ REPLAY FEED ============
+function replayFeed(){
+  replayTimers.forEach(clearTimeout);replayTimers=[];
+  const items=[...document.querySelectorAll('.feed-item')];
+  if(items.length===0)return;
+  items.forEach(el=>el.style.display='none');
+  const stateEl=document.getElementById('feed-state');
+  if(stateEl)stateEl.textContent='Replaying agent activity...';
+  const replayBtn=document.getElementById('replay');
+  if(replayBtn)replayBtn.disabled=true;
+  items.forEach((el,i)=>{replayTimers.push(setTimeout(()=>{el.style.display='';if(i===items.length-1){if(stateEl)stateEl.textContent='Resolution complete';if(replayBtn)replayBtn.disabled=false}},i*400))});
+}
+
+// ============ HELPERS ============
+function escHtml(s){const m={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};return String(s||'').replace(/[&<>"']/g,c=>m[c])}
+function getInitials(name){if(!name)return'?';return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
+function capitalize(s){return String(s||'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
+function cur(){return'S$'}
+
+// ============ INIT ============
+loadCases();
 </script>
 </body>
-<script>if (window.lucide) lucide.createIcons();</script>
+<script>if(window.lucide)lucide.createIcons();</script>
 </html>

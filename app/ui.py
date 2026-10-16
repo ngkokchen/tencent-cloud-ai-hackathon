@@ -12,11 +12,11 @@ import time
 import streamlit as st
 
 from app.components.dispute_form import render_dispute_form
-from app.components.message_log import render_single_message
+from app.components.message_log import render_message_log
 from app.components.ruling_panel import render_ruling_panel
 from app.components.evidence_panel import render_evidence_panel
+from app.components.advocate_cases_panel import render_advocate_cases_panel
 from evidence.loaders import CaseData
-from models.argument import Argument, Rebuttal
 from models.message import ConversationLog
 from models.ruling import Ruling
 
@@ -55,10 +55,44 @@ def _inject_css():
     st.markdown(
         """
         <style>
-        .main .block-container { padding-top: 1rem; max-width: 1100px; }
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+        .main .block-container { padding-top: 1rem; max-width: 1200px; }
         .stSidebar .sidebar-content { padding-top: 1rem; }
-        h2 { margin-top: 1.5rem !important; }
-        h3 { margin-top: 1rem !important; }
+        h2 { margin-top: 1.5rem !important; font-family: 'Manrope', sans-serif !important; }
+        h3 { margin-top: 1rem !important; font-family: 'Manrope', sans-serif !important; }
+        html, body, [class*="css"] { font-family: 'DM Sans', sans-serif !important; }
+        .stButton>button[kind="primary"] {
+            background: #6653ca;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(102,83,202,0.15);
+        }
+        .stButton>button[kind="primary"]:hover {
+            background: #5a48b8;
+            box-shadow: 0 6px 14px rgba(102,83,202,0.22);
+        }
+        ::selection { background: rgba(102,83,202,0.15); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Force light theme if browser/system prefers dark — UI designed for light mode only
+    st.markdown(
+        """
+        <style>
+        @media (prefers-color-scheme: dark) {
+            .stApp { background-color: #ffffff !important; color: #202735 !important; }
+            [data-testid="stAppViewContainer"] { background-color: #ffffff !important; }
+            .main { background-color: #ffffff !important; }
+            .stMarkdown p, .stMarkdown span, .stMarkdown div,
+            .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
+                color: inherit;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -86,20 +120,44 @@ def _run_and_render(case_data: CaseData, run_mode: str):
     dispute_id = case_data.dispute.get("dispute_id", "N/A")
     dispute_type = case_data.dispute.get("dispute_type", "unknown")
     type_label = dispute_type.replace("_", " ").title()
-    st.success(f"**Dispute {dispute_id}** - Type: {type_label}")
+    ride_id = case_data.dispute.get("ride_id", "N/A")
+    pickup = case_data.trip.get("pickup", {}).get("address", "")
+    dropoff = case_data.trip.get("dropoff", {}).get("address", "")
+    route_text = f"{pickup} → {dropoff}" if pickup and dropoff else f"Trip #{ride_id}"
+    dispute_accent = {"route_deviation": "#D85A30", "no_show": "#378ADD"}.get(dispute_type, "#6653ca")
 
-    # -- Evidence panel (collapsible) --
-    with st.expander("Evidence Summary", expanded=False):
-        try:
-            render_evidence_panel(case_data)
-        except Exception as exc:
-            st.warning(f"Evidence panel unavailable: {exc}")
+    st.markdown(
+        f"""
+        <div style="border: 1px solid #e8ebef; border-radius: 12px; overflow: hidden;
+        margin-bottom: 16px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div style="display: flex; align-items: stretch;">
+            <div style="width: 4px; background: {dispute_accent};"></div>
+            <div style="padding: 16px 20px; display: flex; flex: 1;
+            justify-content: space-between; align-items: center;">
+              <div>
+                <span style="color: #202735; font-size: 14px; font-weight: 700;">
+                  {type_label} <span style="color: #7c8390; font-weight: 400;">#{dispute_id}</span>
+                </span>
+                <p style="color: #7c8390; font-size: 12px; margin: 4px 0 0 0;">
+                  {route_text}
+                </p>
+              </div>
+              <span style="background: #eaf6f0; color: #1D9E75; font-size: 11px;
+              font-weight: 600; padding: 4px 10px; border-radius: 6px;">
+                Resolved
+              </span>
+            </div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    st.markdown("---")
-
-    # -- Conversation log header --
-    st.header("Agent Conversation Log")
-    st.caption("Every message between agents is logged in real time.")
+    # -- Evidence room --
+    try:
+        render_evidence_panel(case_data)
+    except Exception as exc:
+        st.warning(f"Evidence panel unavailable: {exc}")
 
     # -- Run the resolution pipeline --
     log = ConversationLog()
@@ -124,41 +182,15 @@ def _run_and_render(case_data: CaseData, run_mode: str):
         st.error(f"Resolution failed: {exc}")
         return
 
-    # -- Render messages progressively (step by step) --
+    # -- Agent conversation container --
     messages = log.messages
-    log_area = st.container()
+    render_message_log(messages)
 
-    for i, msg in enumerate(messages):
-        with log_area:
-            render_single_message(msg, i)
-
-        # Visual pacing -- longer pauses for arguments/rulings
-        if msg.msg_type in ("argument", "rebuttal", "ruling"):
-            time.sleep(0.4)
-        elif msg.msg_type in ("tool_call", "tool_result"):
-            time.sleep(0.15)
-        else:
-            time.sleep(0.12)
-
-    # -- Final ruling --
-    st.markdown("---")
-    st.header("Final Ruling")
+    # -- Final ruling container --
     render_ruling_panel(ruling)
 
-    # -- Advocate case summaries --
-    st.markdown("---")
-    st.header("Advocate Cases")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("#### Rider Advocate")
-        _render_argument_summary(rider_arg)
-        if rider_reb:
-            _render_rebuttal_summary(rider_reb)
-    with col2:
-        st.markdown("#### Driver Advocate")
-        _render_argument_summary(driver_arg)
-        if driver_reb:
-            _render_rebuttal_summary(driver_reb)
+    # -- Advocate cases container --
+    render_advocate_cases_panel(rider_arg, driver_arg, rider_reb, driver_reb)
 
     # -- Persist in session state --
     st.session_state["resolution"] = {
@@ -174,9 +206,16 @@ def _run_and_render(case_data: CaseData, run_mode: str):
 
     # -- Reset button --
     st.markdown("---")
-    if st.button("Start New Dispute"):
+    st.markdown(
+        """
+        <div style="display: flex; justify-content: center; margin: 8px 0 16px 0;">
+        """,
+        unsafe_allow_html=True,
+    )
+    if st.button("Start New Dispute", type="primary"):
         st.session_state.pop("resolution", None)
         st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # --- Render stored results (after page rerun) ------------------------
@@ -195,82 +234,66 @@ def _render_stored():
     dispute_id = res.get("dispute_id", "N/A")
     dispute_type = case.dispute.get("dispute_type", "unknown")
     type_label = dispute_type.replace("_", " ").title()
-    st.success(f"**Dispute {dispute_id}** - Type: {type_label}")
+    ride_id = case.dispute.get("ride_id", "N/A")
+    pickup = case.trip.get("pickup", {}).get("address", "")
+    dropoff = case.trip.get("dropoff", {}).get("address", "")
+    route_text = f"{pickup} → {dropoff}" if pickup and dropoff else f"Trip #{ride_id}"
+    dispute_accent = {"route_deviation": "#D85A30", "no_show": "#378ADD"}.get(dispute_type, "#6653ca")
 
-    # Evidence panel
-    with st.expander("Evidence Summary", expanded=False):
-        try:
-            render_evidence_panel(case)
-        except Exception as exc:
-            st.warning(f"Evidence panel unavailable: {exc}")
+    st.markdown(
+        f"""
+        <div style="border: 1px solid #e8ebef; border-radius: 12px; overflow: hidden;
+        margin-bottom: 16px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div style="display: flex; align-items: stretch;">
+            <div style="width: 4px; background: {dispute_accent};"></div>
+            <div style="padding: 16px 20px; display: flex; flex: 1;
+            justify-content: space-between; align-items: center;">
+              <div>
+                <span style="color: #202735; font-size: 14px; font-weight: 700;">
+                  {type_label} <span style="color: #7c8390; font-weight: 400;">#{dispute_id}</span>
+                </span>
+                <p style="color: #7c8390; font-size: 12px; margin: 4px 0 0 0;">
+                  {route_text}
+                </p>
+              </div>
+              <span style="background: #eaf6f0; color: #1D9E75; font-size: 11px;
+              font-weight: 600; padding: 4px 10px; border-radius: 6px;">
+                Resolved
+              </span>
+            </div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    st.markdown("---")
+    # Evidence room
+    try:
+        render_evidence_panel(case)
+    except Exception as exc:
+        st.warning(f"Evidence panel unavailable: {exc}")
 
-    # Conversation log (all at once)
-    st.header("Agent Conversation Log")
-    st.caption("Every message between agents is logged in real time.")
-    for i, msg in enumerate(messages):
-        render_single_message(msg, i)
+    # Agent conversation container
+    render_message_log(messages)
 
     # Ruling
-    st.markdown("---")
-    st.header("Final Ruling")
     render_ruling_panel(ruling)
 
-    # Advocate summaries
-    st.markdown("---")
-    st.header("Advocate Cases")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("#### Rider Advocate")
-        _render_argument_summary(rider_arg)
-        if rider_reb:
-            _render_rebuttal_summary(rider_reb)
-    with col2:
-        st.markdown("#### Driver Advocate")
-        _render_argument_summary(driver_arg)
-        if driver_reb:
-            _render_rebuttal_summary(driver_reb)
+    # Advocate cases container
+    render_advocate_cases_panel(rider_arg, driver_arg, rider_reb, driver_reb)
 
     # Reset button
     st.markdown("---")
-    if st.button("Start New Dispute"):
+    st.markdown(
+        """
+        <div style="display: flex; justify-content: center; margin: 8px 0 16px 0;">
+        """,
+        unsafe_allow_html=True,
+    )
+    if st.button("Start New Dispute", type="primary"):
         st.session_state.pop("resolution", None)
         st.rerun()
-
-
-# --- Helper: rebuttal summary ----------------------------------------
-
-def _render_rebuttal_summary(reb: Rebuttal):
-    """Render a concise summary of an advocate's rebuttal."""
-    st.markdown("**Rebuttal:**")
-    for cp in reb.counterpoints:
-        st.markdown(f"- {cp}")
-    if reb.reasoning:
-        st.caption(reb.reasoning)
-
-
-# --- Helper: argument summary ----------------------------------------
-
-def _render_argument_summary(arg: Argument):
-    """Render a concise summary of an advocate's structured argument."""
-    remedy_labels = {
-        "refund": "Refund",
-        "compensation": "Compensation",
-        "no_action": "No Action",
-    }
-    remedy_label = remedy_labels.get(arg.requested_remedy, arg.requested_remedy)
-    amount_str = f" (${arg.requested_amount:.2f})" if arg.requested_amount > 0 else ""
-
-    st.markdown(f"**Claim:** {arg.claim}")
-    st.markdown(f"**Requested:** {remedy_label}{amount_str}")
-    st.markdown(f"**Evidence items:** {len(arg.evidence)}")
-
-    clauses = ", ".join(p.clause for p in arg.policy_cited) or "None"
-    st.markdown(f"**Policy clauses cited:** {clauses}")
-
-    with st.expander("Full argument details"):
-        st.json(arg.model_dump())
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # --- Landing page ----------------------------------------------------
@@ -279,52 +302,124 @@ def _show_landing():
     """Informational landing page shown when no dispute is selected."""
     st.markdown(
         """
-        ## How it works
+        <div style="border: 1px solid #e8ebef; border-radius: 16px; overflow: hidden;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f7fc 100%);
+        margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div style="padding: 32px 36px;">
+            <span style="display: inline-block; background: rgba(102,83,202,0.1);
+            color: #6653ca; font-size: 10px; font-weight: 700; padding: 4px 12px;
+            border-radius: 6px; text-transform: uppercase; letter-spacing: 0.08em;">
+              Three Perspectives. One Fair Decision.
+            </span>
+            <h2 style="font-size: 32px; font-weight: 800; color: #202735;
+            margin: 16px 0 12px 0; letter-spacing: -1px;
+            font-family: 'Manrope', sans-serif;">
+              Less back-and-forth.<br>More moving forward.
+            </h2>
+            <p style="font-size: 14px; color: #7c8390; line-height: 1.6;
+            max-width: 480px;">
+              Give every dispute the attention it deserves. Independent advocates
+              examine the evidence, challenge assumptions, and bring both sides
+              to a reasoned resolution.
+            </p>
+          </div>
+        </div>
 
-        This system uses **three AI agents** to autonomously resolve
-        ride-hailing disputes:
+        <h3 style="font-size: 18px; font-weight: 700; color: #202735;
+        margin-bottom: 4px;">From complaint to clarity</h3>
+        <p style="font-size: 12px; color: #7c8390; margin-bottom: 16px;">
+          An explainable, three-phase process
+        </p>
+        """,
+        unsafe_allow_html=True,
+    )
 
-        | Agent | Role | Bias |
-        |-------|------|------|
-        | **Rider Advocate** | Gathers evidence supporting the rider's claim | Pro-rider |
-        | **Driver Advocate** | Gathers evidence supporting the driver's position | Pro-driver |
-        | **Judge** | Weighs both cases, applies company policy, issues binding ruling | Neutral |
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown(
+            """
+            <div style="border: 1px solid #e8ebef; border-radius: 12px;
+            padding: 20px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <span style="font-size: 10px; font-weight: 700; color: #6653ca;
+              letter-spacing: 0.08em;">01 / GATHER</span>
+              <h4 style="font-size: 14px; font-weight: 600; color: #202735;
+              margin: 8px 0 6px 0;">Independent investigation</h4>
+              <p style="font-size: 12px; color: #7c8390; line-height: 1.5;">
+                Rider and driver advocates gather trip, fare, chat, and policy
+                evidence in parallel.
+              </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c2:
+        st.markdown(
+            """
+            <div style="border: 1px solid #e8ebef; border-radius: 12px;
+            padding: 20px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <span style="font-size: 10px; font-weight: 700; color: #6653ca;
+              letter-spacing: 0.08em;">02 / CHALLENGE</span>
+              <h4 style="font-size: 14px; font-weight: 600; color: #202735;
+              margin: 8px 0 6px 0;">A balanced exchange</h4>
+              <p style="font-size: 12px; color: #7c8390; line-height: 1.5;">
+                Both advocates present their arguments and test the other side's
+                reasoning with rebuttals.
+              </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with c3:
+        st.markdown(
+            """
+            <div style="border: 1px solid #e8ebef; border-radius: 12px;
+            padding: 20px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+              <span style="font-size: 10px; font-weight: 700; color: #6653ca;
+              letter-spacing: 0.08em;">03 / RESOLVE</span>
+              <h4 style="font-size: 14px; font-weight: 600; color: #202735;
+              margin: 8px 0 6px 0;">A transparent ruling</h4>
+              <p style="font-size: 12px; color: #7c8390; line-height: 1.5;">
+                The judge delivers a decision, amount, confidence score, and an
+                explanation for each party.
+              </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        ### Resolution process
-
-        1.  **Both advocates** independently call evidence tools
-            (GPS route, chat logs, fare breakdown, user history, company policy)
-        2.  Each advocate builds a **structured argument** citing specific
-            policy clauses and evidence items
-        3.  Each advocate reviews the opponent's argument and produces
-            **counterpoints** (rebuttal phase)
-        4.  The **Judge** reviews both arguments and rebuttals, independently
-            verifies key claims via tools, and issues a ruling
-
-        ### Supported dispute types
-
-        - **Route deviation** - driver took a longer route than the optimal path
-        - **No-show charge** - rider disputes a no-show / cancellation fee
-
-        ### Ruling output
-
-        The Judge produces:
-
-        - **Decision** - refund / compensation / no action
-        - **Amount** - dollar figure for the remedy
-        - **Confidence score** - 0.0 to 1.0 (below 0.6 flags for human review)
-        - **Dual explanations** - separate natural-language reasoning for
-          rider and driver
-
-        ---
-
-        **Pick a sample case or file a custom dispute from the sidebar**,
-        then click **Resolve Dispute**.
-
-        > **Demo mode** is enabled by default - you can see the full
-        > system without an API key. Uncheck it to use real LLM-powered agents
-        > (requires `LLM_API_KEY` in `.env`).
+    st.markdown(
         """
+        <div style="border: 1px solid #e8ebef; border-radius: 12px;
+        padding: 20px; background: white; margin-top: 16px;
+        display: flex; justify-content: space-between; align-items: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <div>
+            <p style="font-size: 14px; font-weight: 600; color: #202735; margin: 0;">
+              Ready to hear both sides?
+            </p>
+            <p style="font-size: 12px; color: #7c8390; margin: 4px 0 0 0;">
+              Pick a sample case or file a custom dispute from the sidebar.
+            </p>
+          </div>
+          <div>
+            <span style="display: inline-block; background: #f5f6f8;
+            color: #7c8390; font-size: 11px; font-weight: 500;
+            padding: 4px 10px; border-radius: 6px; margin-right: 4px;">
+              Route deviation
+            </span>
+            <span style="display: inline-block; background: #f5f6f8;
+            color: #7c8390; font-size: 11px; font-weight: 500;
+            padding: 4px 10px; border-radius: 6px;">
+              No-show charge
+            </span>
+          </div>
+        </div>
+        <p style="font-size: 11px; color: #7c8390; text-align: center; margin-top: 12px;">
+          <b>Demo mode</b> is enabled by default — you can see the full system
+          without an API key.
+        </p>
+        """,
+        unsafe_allow_html=True,
     )
 
 
